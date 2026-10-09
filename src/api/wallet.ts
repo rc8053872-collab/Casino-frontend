@@ -13,6 +13,16 @@ export interface Transaction {
   status: string;
   createdAt: string;
   description: string;
+  referenceId?: string | null;
+}
+
+export interface PaymentSettings {
+  configured: boolean;
+  isDemo: boolean;
+  demoSubmissionsEnabled: boolean;
+  upiId: string | null;
+  qrCodeUrl: string | null;
+  withdrawFeePercent: number;
 }
 
 export const getBalance = (): Promise<WalletBalance> => {
@@ -23,10 +33,23 @@ export const getTransactions = (limit = 50, offset = 0): Promise<Transaction[]> 
   return apiClient.get('/wallet/transactions', { params: { limit, offset } });
 };
 
-export const deposit = (amount: number): Promise<{ paymentUrl: string; transactionId: string }> => {
-  return apiClient.post('/wallet/deposit', { amount });
+export const getPaymentSettings = (): Promise<PaymentSettings> => {
+  return apiClient.get('/wallet/settings');
 };
 
-export const withdraw = (amount: number, destinationAccount: string): Promise<any> => {
-  return apiClient.post('/wallet/withdraw', { amount, destinationAccount });
+export const submitDeposit = (amount: number, utrNumber: string, proofDataUrl: string): Promise<{ message: string; transaction: Transaction }> => {
+  return apiClient.post('/wallet/deposit', { amount, utrNumber, proofDataUrl });
+};
+
+export interface WithdrawalBankDetails {
+  accountNumber: string;
+  ifscCode: string;
+  branchName: string;
+}
+
+export const submitWithdrawal = (
+  amount: number,
+  bankDetails: WithdrawalBankDetails
+): Promise<{ message: string; transaction: Transaction }> => {
+  return apiClient.post('/wallet/withdraw', { amount, ...bankDetails });
 };

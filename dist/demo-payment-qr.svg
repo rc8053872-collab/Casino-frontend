@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320">
+  <rect width="320" height="320" rx="16" fill="#fff"/>
+  <g fill="#10152f">
+    <path d="M24 24h88v88H24zm16 16v56h56V40zM208 24h88v88h-88zm16 16v56h56V40zM24 208h88v88H24zm16 16v56h56v-56z"/>
+    <path d="M48 48h40v40H48zm184 0h40v40h-40zM48 232h40v40H48zm80-208h24v24h-24zm32 0h24v40h-24zm-32 40h24v24h-24zm32 16h24v24h-24zm32 8h16v24h-16zm-64 24h24v32h-24zm32 8h24v24h-24zm48 8h24v16h-24zm-80 32h24v24h-24zm32 8h16v32h-16zm24-8h24v24h-24zm40 0h24v24h-24zm-104 40h24v24h-24zm32 8h24v24h-24zm32-8h16v24h-16zm24 8h24v24h-24zm40 8h24v24h-24zm-96 24h24v24h-24zm40 8h24v24h-24zm32-8h24v24h-24z"/>
+  </g>
+  <rect x="42" y="136" width="236" height="48" rx="12" fill="#fff4d4" stroke="#e4a900" stroke-width="2"/>
+  <text x="160" y="157" text-anchor="middle" fill="#654700" font-family="Arial,sans-serif" font-size="15" font-weight="700">DEMO ONLY</text>
+  <text x="160" y="174" text-anchor="middle" fill="#654700" font-family="Arial,sans-serif" font-size="10">NOT A REAL PAYMENT QR</text>
+</svg>

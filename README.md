@@ -1,4 +1,4 @@
-# Orbit Casino
+# Maltiplayx
 
 Premium casino lobby UI built in React and TypeScript with a mock game-provider boundary.
 

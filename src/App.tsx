@@ -1,12 +1,34 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Bell, ChevronRight, Gift, Headphones, Home, LayoutGrid, Play, Search, ShieldCheck, Sparkles, Star, Trophy, UserRound, X, Zap, ArrowLeft, BadgeDollarSign, CalendarDays, ClipboardList, Coins, Fish, RefreshCcw, Spade, WalletCards } from 'lucide-react'
-import { Category, Game, mockGameProvider } from './services/gameProvider'
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
+import { Bell, ChevronRight, Gift, Headphones, Home, LayoutGrid, Play, Search, ShieldCheck, Sparkles, Star, Trophy, UserRound, X, Zap, ArrowLeft, BadgeDollarSign, CalendarDays, ClipboardList, Coins, Fish, RefreshCcw, Spade, WalletCards, Volume2, Mail } from 'lucide-react'
+import { Category, Game, liveGameProvider } from './services/gameProvider'
 import { DragonTigerGame } from './DragonTigerGame'
+import { getGameLogo } from './utils/getGameLogo'
+import { DepositWorkflow } from './components/DepositWorkflow'
+import { getBalance } from './api/wallet'
+import { FairPlayPage, InvitePromoPage, ProfilePage, SupportPage, VipPage } from './components/MemberPages'
+import { apiClient } from './api/client'
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      marquee: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & { scrollamount?: string };
+    }
+  }
+}
+
+const Marquee = 'marquee' as any;
+
+type Account = { id: string; email: string | null; phone: string | null; balance: number; role?: string };
+
+
 
 const winners = [
-  { user: 'm***r', game: 'Neon Reels', amount: '$2,480.00', time: '2m ago' },
-  { user: 'a***n', game: 'Royal Baccarat', amount: '$1,120.00', time: '4m ago' },
-  { user: 'j***e', game: 'Moon Princess', amount: '$864.00', time: '8m ago' },
+  { user: '9***56', game: 'Aviator', amount: '53x', image: '/icons/aviator.jpg' },
+  { user: '9***17', game: 'Dragon Tiger', amount: '74x', image: '/icons/dragon.jpg' },
+  { user: '2***51', game: 'Super Slot', amount: '155x', image: '/icons/slot.jpg' },
+  { user: '8***92', game: 'Roulette', amount: '50x', image: '/icons/roulette.jpg' },
+  { user: '4***71', game: 'Crash', amount: '53x', image: '/icons/aviator.jpg' },
+  { user: '7***24', game: 'Baccarat', amount: '100x', image: '/icons/dragon.jpg' },
 ]
 
 type PromoTab = 'Event' | 'Mission' | 'VIP' | 'Rebate' | 'Unclaimed'
@@ -37,45 +59,552 @@ function PromoPage({ onOpenDeposit }: { onOpenDeposit: () => void }) {
     <div className="promo-tabs"><button aria-label="Back to home"><ArrowLeft size={19} /></button>{(['Event', 'Mission', 'VIP', 'Rebate', 'Unclaimed'] as PromoTab[]).map((item) => <button className={tab === item ? 'active' : ''} onClick={() => setTab(item)} key={item}>{item}</button>)}</div>
     {tab === 'Event' && <div className="promo-layout"><aside className="promo-sidebar">{promoCategories.map(({ label, icon: Icon }) => <button className={category === label ? 'active' : ''} onClick={() => setCategory(label)} key={label}><Icon size={18} /><span>{label}</span></button>)}<div className="sidebar-divider" /><button className="outline-action"><CalendarDays size={15} /> History</button><button className="outline-action" onClick={() => setClaimed([])}><RefreshCcw size={14} /> Refresh rewards</button></aside><section className="promo-feed"><div className="promo-feed-heading"><div><p className="eyebrow">REWARDS CENTER</p><h2>Featured promotions</h2></div><button className="text-button" onClick={onOpenDeposit}>Wallet <ChevronRight size={15} /></button></div><div className="promo-banner-grid">{visibleBanners.map((banner) => <article className="promo-banner-card" key={banner.id} style={{ backgroundImage: `linear-gradient(90deg, rgba(6, 8, 23, .78), rgba(6, 8, 23, .05)), url(${banner.image})` }}><div><p>{banner.category}</p><h3>{banner.title}</h3><strong>{banner.subtitle}</strong><button onClick={() => { setClaimed((current) => current.includes(banner.id) ? current : [...current, banner.id]); onOpenDeposit() }}>{claimed.includes(banner.id) ? 'Claimed' : 'View offer'} <ChevronRight size={14} /></button></div></article>)}</div></section></div>}
     {tab === 'Mission' && <section className="mission-panel"><div className="mission-progress"><div><p className="eyebrow">YOUR DAILY PROGRESS</p><h2><Coins size={18} /> 0 points</h2></div><button className="text-button">Details <ChevronRight size={14} /></button><div className="chest-track">{[1, 2, 3, 4].map((chest) => <div className="chest" key={chest}><span>▣</span><small>৳{chest * 50}</small></div>)}</div></div><div className="mission-filters"><button className="active">New player</button><button>Daily mission</button><button>Weekly mission</button><button className="refresh-button"><RefreshCcw size={14} /> Refresh</button></div>{['First deposit upon registration', 'First withdrawal', 'Add any social account', 'Login to the app'].map((task, index) => <div className="task-card" key={task}><div><span>{index === 0 ? '🎁' : index === 1 ? '💳' : '✨'}</span><b>{task}</b><small>Reward value · {27 + index * 10}.00</small></div><button onClick={onOpenDeposit}>Go</button></div>)}</section>}
-    {tab === 'VIP' && <section className="vip-panel"><div className="vip-level-card"><div><p>Current level</p><h2>VIP <em>0</em></h2><span>Bet 1,000.00 to enjoy member benefits</span></div><div className="vip-medal">0<small>VIP</small></div></div><div className="vip-heading"><Trophy size={18} /> VIP reward list <Trophy size={18} /></div><div className="vip-switch"><button>VIP reward</button><button className="active">Rules</button></div><div className="rules-copy">{['From 00:00 on the 27th to 23:59:59 on the 27th of each month, please click the Receive button at the top of the VIP page to receive your rewards.', 'Customers who join OrbitPlay and upgrade to VIP 3 or above can enjoy bonus every month.', 'After placing a bet, the system will be updated every 10 minutes.', 'Promotion criteria: If you meet the VIP promotion requirements, you can be promoted to the corresponding VIP level and receive the corresponding promotion bonus.'].map((rule, index) => <p key={rule}><b>{index + 1}.</b> {rule}</p>)}</div></section>}
+    {tab === 'VIP' && <section className="vip-panel"><div className="vip-level-card"><div><p>Current level</p><h2>VIP <em>0</em></h2><span>Bet 1,000.00 to enjoy member benefits</span></div><div className="vip-medal">0<small>VIP</small></div></div><div className="vip-heading"><Trophy size={18} /> VIP reward list <Trophy size={18} /></div><div className="vip-switch"><button>VIP reward</button><button className="active">Rules</button></div><div className="rules-copy">{['From 00:00 on the 27th to 23:59:59 on the 27th of each month, please click the Receive button at the top of the VIP page to receive your rewards.', 'Customers who join Maltiplayx and upgrade to VIP 3 or above can enjoy bonus every month.', 'After placing a bet, the system will be updated every 10 minutes.', 'Promotion criteria: If you meet the VIP promotion requirements, you can be promoted to the corresponding VIP level and receive the corresponding promotion bonus.'].map((rule, index) => <p key={rule}><b>{index + 1}.</b> {rule}</p>)}</div></section>}
     {(tab === 'Rebate' || tab === 'Unclaimed') && <section className="empty-promos"><BadgeDollarSign size={42} /><h2>{tab === 'Rebate' ? 'Rebate rewards are on the way' : 'Nothing unclaimed yet'}</h2><p>Complete a promotion or mission and your rewards will appear here.</p><button className="gold-button" onClick={() => setTab('Event')}>Explore promotions <ChevronRight size={15} /></button></section>}
   </main>
+}
+
+function DepositModal({ onClose, user }: { onClose: () => void, user: any }) {
+  const [amount, setAmount] = useState('');
+  const [utr, setUtr] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [setting, setSetting] = useState<{ upiId: string, qrCodeUrl: string } | null>(null);
+  const [message, setMessage] = useState('');
+  
+  useEffect(() => {
+    fetch(import.meta.env.VITE_API_URL + '/v1/wallet/settings', {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+    .then(res => res.json())
+    .then(data => setSetting(data))
+    .catch(console.error);
+  }, []);
+
+  const submitDeposit = async () => {
+    if (!user) { setMessage('Please login first'); return; }
+    if (Number(amount) < 200) { setMessage('Minimum deposit is ₹200'); return; }
+    if (!utr) { setMessage('UTR number is required'); return; }
+    
+    setLoading(true);
+    try {
+      const res = await fetch(import.meta.env.VITE_API_URL + '/v1/wallet/deposit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+        body: JSON.stringify({ amount: Number(amount), utrNumber: utr })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage('Deposit submitted successfully! Waiting for admin approval.');
+        setAmount('');
+        setUtr('');
+      } else {
+        setMessage(data.error || 'Deposit failed');
+      }
+    } catch (err) {
+       setMessage('Network error');
+    }
+    setLoading(false);
+  };
+
+  return (
+    <>
+      <p className="eyebrow">DEPOSIT INR</p>
+      <h2 style={{ marginBottom: '15px' }}>Add Funds to Wallet</h2>
+      {setting ? (
+         <div style={{ textAlign: 'center', marginBottom: '20px', background: 'rgba(255,255,255,0.05)', padding: '15px', borderRadius: '12px', border: '1px solid rgba(143, 157, 215, 0.17)' }}>
+           {setting.qrCodeUrl && <img src={setting.qrCodeUrl} alt="QR Code" style={{ width: '140px', height: '140px', borderRadius: '8px', margin: '0 auto 10px', background: '#fff', padding: '10px' }} />}
+           <p style={{ margin: 0, fontSize: '15px', color: '#ccd6f6' }}>UPI ID: <b style={{ color: '#f4c35a', letterSpacing: '0.5px' }}>{setting.upiId}</b></p>
+           <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#8898c6' }}>Scan QR or copy UPI ID to pay. Minimum <strong style={{ color: '#fff' }}>₹200</strong>.</p>
+         </div>
+      ) : <p style={{ textAlign: 'center', color: '#8898c6' }}>Loading payment details...</p>}
+      
+      {message && <p style={{ color: message.includes('success') ? '#00d13b' : '#ff4444', marginBottom: '15px', fontSize: '13px', textAlign: 'center', fontWeight: 'bold' }}>{message}</p>}
+      
+      <label>Amount (₹)<input type="number" placeholder="e.g. 500" value={amount} onChange={(e) => setAmount(e.target.value)} /></label>
+      <label>12-Digit UTR/Ref Number<input type="text" placeholder="e.g. 301234567890" value={utr} onChange={(e) => setUtr(e.target.value)} /></label>
+      <button className="gold-button full" onClick={submitDeposit} disabled={loading} style={{ marginTop: '10px' }}>{loading ? 'Submitting...' : <>Submit Request <ChevronRight size={17} /></>}</button>
+    </>
+  );
 }
 
 function App() {
   const [categories, setCategories] = useState<Category[]>([])
   const [games, setGames] = useState<Game[]>([])
-  const [activeCategory, setActiveCategory] = useState('hot')
+  const [activeCategory, setActiveCategory] = useState('slots')
+  const [activeProvider, setActiveProvider] = useState<string | null>(null)
   const [favorites, setFavorites] = useState<string[]>([])
   const [search, setSearch] = useState('')
-  const [modal, setModal] = useState<'login' | 'deposit' | null>(null)
+  const [modal, setModal] = useState<'login' | 'deposit' | 'register' | null>(null)
   const [loading, setLoading] = useState(true)
-  const [view, setView] = useState<'home' | 'promos' | 'dragon-tiger'>('home')
+  const [view, setView] = useState<'home' | 'promos' | 'vip' | 'profile' | 'fairplay' | 'support' | 'dragon-tiger'>('home')
+  const [inrFilter, setInrFilter] = useState(true)
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [providerList, setProviderList] = useState<string[]>([]);
+  const [providerGameFilter, setProviderGameFilter] = useState<'All' | 'Slots' | 'Aviator' | 'Dragon Tiger' | 'Triple 7' | 'Suspended'>('All');
+
+  const [user, setUser] = useState<Account | null>(null);
+  const updateWalletBalance = useCallback((balance: number) => {
+    setUser(current => current && current.balance !== balance ? { ...current, balance } : current);
+  }, []);
+  const refreshWalletBalance = useCallback(async () => {
+    try {
+      const wallet = await getBalance();
+      updateWalletBalance(wallet.balance);
+    } catch (error) {
+      console.error('Wallet balance refresh failed:', error);
+    }
+  }, [updateWalletBalance]);
+  const [authForm, setAuthForm] = useState(() => ({
+    email: '',
+    phone: '',
+    identifier: '',
+    password: '',
+    confirmPassword: '',
+    referralCode: new URLSearchParams(window.location.search).get('ref')?.trim().toUpperCase() || ''
+  }));
+  const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [supportWhatsApp, setSupportWhatsApp] = useState<string | null>(null);
+  
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    mockGameProvider.getCategories().then(setCategories)
+    if (activeProvider && sidebarRef.current) {
+      if (activeProvider === 'JILI') {
+        sidebarRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        const activeBtn = document.getElementById(`provider-btn-${activeProvider}`);
+        if (activeBtn) {
+          const offsetTop = activeBtn.offsetTop;
+          const currentScroll = sidebarRef.current.scrollTop;
+          const containerHeight = sidebarRef.current.clientHeight;
+          
+          if (offsetTop < currentScroll || offsetTop + activeBtn.clientHeight > currentScroll + containerHeight) {
+             sidebarRef.current.scrollTo({ top: offsetTop - 20, behavior: 'smooth' });
+          }
+        }
+      }
+    }
+  }, [activeProvider]);
+  const [providerTab, setProviderTab] = useState('All');
+  const [bannerIndex, setBannerIndex] = useState(0);
+  const sliderRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBannerIndex((prev) => (prev + 1) % 3);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (sliderRef.current) {
+      const width = sliderRef.current.clientWidth;
+      sliderRef.current.scrollTo({ left: width * bannerIndex, behavior: 'smooth' });
+    }
+  }, [bannerIndex]);
+
+  useEffect(() => {
+    liveGameProvider.getCategories().then(setCategories)
+    liveGameProvider.getProviders('SLOT').then(setProviderList)
+    apiClient.get<{ configured: boolean; whatsappNumber: string | null }, { configured: boolean; whatsappNumber: string | null }>('/support/settings')
+      .then(settings => setSupportWhatsApp(settings.configured ? settings.whatsappNumber : null))
+      .catch(error => console.error('Support settings could not be loaded:', error));
+    
+    // Check auth on load
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch(import.meta.env.VITE_API_URL + '/v1/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'SUCCESS') setUser(data.user);
+        else localStorage.removeItem('token');
+      })
+      .catch(() => localStorage.removeItem('token'));
+    }
   }, [])
 
+  const openSupport = () => {
+    if (!supportWhatsApp) {
+      setView('support');
+      return;
+    }
+    window.open(`https://wa.me/${supportWhatsApp}`, '_blank', 'noopener,noreferrer');
+  };
+
+  const openDeposit = () => {
+    if (!user) {
+      setAuthError('');
+      setModal('register');
+      return;
+    }
+    setModal('deposit');
+  };
+
   useEffect(() => {
-    setLoading(true)
-    mockGameProvider.getGames(activeCategory).then((result) => {
-      setGames(result)
-      setLoading(false)
-    })
-  }, [activeCategory])
+    if (!user?.id) return;
+    void refreshWalletBalance();
+    const interval = window.setInterval(() => { void refreshWalletBalance(); }, 20000);
+    const refreshOnFocus = () => {
+      if (document.visibilityState === 'visible') void refreshWalletBalance();
+    };
+    window.addEventListener('focus', refreshOnFocus);
+    document.addEventListener('visibilitychange', refreshOnFocus);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('focus', refreshOnFocus);
+      document.removeEventListener('visibilitychange', refreshOnFocus);
+    };
+  }, [refreshWalletBalance, user?.id]);
 
-  const filteredGames = useMemo(() => games.filter((game) => game.name.toLowerCase().includes(search.toLowerCase())), [games, search])
+  // Debounce Search
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [search]);
 
-  const toggleFavorite = (id: string) => setFavorites((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+    setGames([]);
+    setHasMore(true);
+    setLoadingMore(false);
+  }, [inrFilter, activeProvider, debouncedSearch, providerGameFilter]);
+
+  // Fetch Games (paginated)
+  useEffect(() => {
+    let cancelled = false;
+    const fetchGames = async () => {
+      if (page === 1) setLoading(true);
+      else setLoadingMore(true);
+
+      const apiCategory = activeProvider && providerGameFilter === 'Slots' ? 'SLOT' : 'all';
+      const apiSearch = activeProvider && providerGameFilter === 'Aviator'
+        ? 'aviator'
+        : debouncedSearch;
+      const apiGameType = activeProvider && ['Dragon Tiger', 'Triple 7', 'Suspended'].includes(providerGameFilter)
+        ? providerGameFilter
+        : undefined;
+      const loadFullHomeCatalog = !activeProvider && !debouncedSearch;
+      const pageLimit = loadFullHomeCatalog ? 100 : 40;
+      const result = await liveGameProvider.getGames(apiCategory, inrFilter, activeProvider || 'All', apiSearch, page, pageLimit, apiGameType);
+      let fetchedGames = result.games;
+      let totalPages = result.pagination.totalPages;
+
+      if (loadFullHomeCatalog && page === 1) {
+        for (let nextPage = 2; nextPage <= totalPages; nextPage += 1) {
+          const nextResult = await liveGameProvider.getGames(apiCategory, inrFilter, 'All', apiSearch, nextPage, pageLimit, apiGameType);
+          fetchedGames = [...fetchedGames, ...nextResult.games];
+          totalPages = Math.max(totalPages, nextResult.pagination.totalPages);
+        }
+      }
+
+      if (cancelled) return;
+      setGames(prev => {
+         if (page === 1) return fetchedGames;
+         // Prevent duplicates
+         const existingIds = new Set(prev.map(g => g.id));
+         const newGames = fetchedGames.filter(g => !existingIds.has(g.id));
+         return [...prev, ...newGames];
+      });
+      
+      setHasMore(!loadFullHomeCatalog && result.pagination.page < result.pagination.totalPages);
+      setLoading(false);
+      setLoadingMore(false);
+    };
+    fetchGames();
+    return () => { cancelled = true; };
+  }, [page, inrFilter, activeProvider, debouncedSearch, providerGameFilter]);
+
+  // Only paginate actual game lists; the home provider directory is already complete.
+  useEffect(() => {
+    if (!activeProvider && !debouncedSearch) return;
+
+    const handleScroll = () => {
+      if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 500) {
+        if (!loading && !loadingMore && hasMore) {
+          setPage(prev => prev + 1);
+        }
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [activeProvider, debouncedSearch, loading, loadingMore, hasMore]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = document.querySelectorAll('.category-section');
+      let currentCategory = activeCategory;
+      let minDistance = Infinity;
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
+      
+      sections.forEach((section: any) => {
+        const rect = section.getBoundingClientRect();
+        // Check which section is closest to top viewport (offset by header ~150px)
+        const distance = Math.abs(rect.top - 150);
+        if (distance < minDistance && rect.top < window.innerHeight / 2) {
+          minDistance = distance;
+          currentCategory = section.id.replace('category-', '');
+        }
+      });
+      if (currentCategory && currentCategory !== activeCategory) {
+        setActiveCategory(currentCategory);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [activeCategory]);
+
+  const isSuspendedGame = (game: Game) =>
+    (Boolean(game.status) && game.status?.toUpperCase() !== 'ACTIVE') || game.isActive === false;
+
+  // filteredGames is just games now, because search is handled by backend
+  const filteredGames = activeProvider && providerGameFilter === 'Suspended'
+    ? games.filter(isSuspendedGame)
+    : games.filter(game => !isSuspendedGame(game));
+  const getHomeGameCategory = (game: Game) => {
+    const category = game.category.trim().toLowerCase();
+    const name = game.name.trim().toLowerCase();
+    if (name === 'aviator extra bet') return 'minigames';
+    if (name.includes('aviator')) return 'aviator';
+    if (/dragon[\s-]*tiger/i.test(name)) return 'dragon-tiger';
+    if (name.includes('fish') || category.includes('fish')) return 'fishing';
+    if (['slot', 'slots'].includes(category)) return 'slots';
+    if (category.includes('lottery')) return 'lottery';
+    if (category.includes('live') || category === 'casino') return 'live';
+    if (category.includes('card') || category === 'roulette' || /baccarat|poker|teen.?patti/i.test(name)) return 'cards';
+    if (['mini', 'arcade', 'crash', 'hundred-player'].includes(category)) return 'minigames';
+    if (category.includes('sport')) return 'sports';
+    if (category.includes('cockfight') || category.includes('cock-fight')) return 'cockfight';
+    return 'other';
+  };
+  const getHomeCategoryGames = (categoryId: string) => filteredGames.filter(game =>
+    categoryId === 'hot' ? game.isHot : getHomeGameCategory(game) === categoryId
+  );
+  const homeCategoryOptions = [
+    { id: 'slots', label: 'Slots', image: '/icons/slot_main.jpg' },
+    { id: 'minigames', label: 'Mini Games', image: '/icons/3-power-dragons.webp' },
+    { id: 'live', label: 'Live Games', image: '/icons/handicap-baccarat.webp' },
+    { id: 'lottery', label: 'Lottery', image: '/icons/25-coins-santas-jackpot.webp' },
+    { id: 'aviator', label: 'Aviator', image: '/icons/aviator_main.jpg' },
+    { id: 'cards', label: 'Cards', image: '/icons/roulette_main.jpg' },
+    { id: 'dragon-tiger', label: 'Dragon Tiger', image: '/icons/dragon_main.jpg' },
+    { id: 'sports', label: 'Sports', image: '/icons/aviator.jpg' },
+    { id: 'fishing', label: 'Fish', image: '/icons/fishing-cover.webp' },
+    { id: 'cockfight', label: 'Cockfight', image: '/icons/dragon.jpg' },
+    { id: 'other', label: 'More Games', image: '/icons/diamond-treasure.webp' },
+  ].filter(option =>
+    getHomeCategoryGames(option.id).length > 0
+    || option.id === 'dragon-tiger'
+    || (option.id === 'fishing' && games.some(game => getHomeGameCategory(game) === option.id))
+  );
+  const providerGames = filteredGames
+    .filter(game => game.provider === activeProvider)
+    .filter(game => providerGameFilter !== 'Slots' || game.category.toUpperCase() === 'SLOT' || game.category.toLowerCase() === 'slots')
+    .filter(game => providerGameFilter !== 'Aviator' || (game.name.toLowerCase().includes('aviator') && game.name.toLowerCase() !== 'aviator extra bet'))
+    .filter(game => providerGameFilter !== 'Dragon Tiger' || /dragon[\s-]*tiger/i.test(game.name))
+    .filter(game => providerGameFilter !== 'Triple 7' || /triple[\s-]*(?:7|seven)|7\s*7\s*7|777/i.test(game.name))
+    .filter(game => providerGameFilter === 'Suspended' ? isSuspendedGame(game) : !isSuspendedGame(game))
+    .filter(game => !search || game.name.toLowerCase().includes(search.trim().toLowerCase()))
+    .filter(game => {
+      if (providerTab === 'Hot') return game.isHot;
+      if (providerTab === 'Recent') return game.isNew;
+      if (providerTab === 'Favorites') return favorites.includes(game.id);
+      return true;
+    });
+
+  const dynamicProviders = useMemo(() => {
+    const source = providerList.length ? providerList : games.map(g => g.provider);
+    const provs = Array.from(new Set(source.filter((provider): provider is string =>
+      Boolean(provider?.trim()) && !/^[a-f\d]{24,}$/i.test(provider.trim())
+    )));
+    const top = ['JILI', 'PG', 'JDB', 'Playtech', 'Big Time Gaming', 'NetEnt', 'RSG', 'DB Slots', 'Redtiger', 'YGR', 'BBIN', 'HB', 'CHOICE', 'VA', 'MW', 'BGaming'];
+    const topExisting = top.filter(t => provs.includes(t));
+    const rest = provs.filter(p => !top.includes(p)).sort();
+    return Array.from(new Set([...topExisting, ...rest]));
+  }, [games, providerList]);
+
+  const toggleFavorite = (id: string) => setFavorites((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+
+  const renderGameCard = (game: Game) => {
+    const isSupported = !game.supportedCurrencies || game.supportedCurrencies.includes('INR');
+    const isSuspended = isSuspendedGame(game);
+    const isArcade = game.category.toUpperCase() === 'ARCADE';
+    const logoSrc = getGameLogo(game);
+    
+    return (
+      <article className={`game-card home-catalog-card${isArcade ? ' mini-game-card' : ''}`} key={game.id} onClick={() => isSupported && !isSuspended ? launch(game) : undefined} style={{ background: 'transparent', padding: 0, border: 'none', opacity: isSupported && !isSuspended ? 1 : 0.55, cursor: isSuspended ? 'not-allowed' : 'pointer' }}>
+        <div className="game-image" style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', aspectRatio: '1/1', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 15px rgba(0,0,0,0.4)' }}>
+          <img 
+            src={logoSrc} 
+            alt={game.name} 
+            style={{ width: '100%', height: '100%', objectFit: 'cover', color: 'transparent' }}
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              if (target.src.includes('slot-new.png')) return;
+              target.src = '/category/slot-new.png';
+            }} 
+          />
+          {(isSuspended || !isSupported) && (
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: '#e74b62', color: '#fff', fontSize: '9px', fontWeight: 'bold', textAlign: 'center', padding: '4px', textTransform: 'uppercase' }}>
+              {isSuspended ? 'Suspended' : 'Unsupported'}
+            </div>
+          )}
+          {(game.isHot || game.isNew) && <span style={{ position: 'absolute', top: '6px', left: '6px', background: '#fff', color: '#000', fontSize: '10px', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', boxShadow: '0 2px 5px rgba(0,0,0,0.5)' }}>👍</span>}
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              if (!user) {
+                setAuthError('');
+                setModal('register');
+                return;
+              }
+              toggleFavorite(game.id);
+            }}
+            aria-label={`${favorites.includes(game.id) ? 'Remove' : 'Add'} ${game.name} ${favorites.includes(game.id) ? 'from' : 'to'} favorites`}
+            style={{ position: 'absolute', top: '6px', right: '6px', width: '26px', height: '26px', display: 'grid', placeItems: 'center', borderRadius: '50%', background: 'rgba(5,8,26,.75)', color: favorites.includes(game.id) ? '#f4c35a' : '#fff' }}
+          >
+            <Star size={15} fill={favorites.includes(game.id) ? 'currentColor' : 'none'} />
+          </button>
+        </div>
+        <div className="game-name" style={{ textAlign: 'center', marginTop: '6px', color: '#ccd6f6', fontSize: '11px', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {game.name}
+        </div>
+      </article>
+    );
+  };
+
+  const renderProviderLogo = (provider: string) => {
+    if (provider === 'JILI') return <div style={{ fontSize: '14px', fontWeight: '900', color: '#ffcc00', textShadow: '1px 1px 0 #000, 0 0 4px #000', fontStyle: 'italic', flexShrink: 0 }}>JILI</div>;
+    if (provider === 'PG') return <div style={{ fontSize: '14px', fontWeight: '900', color: '#fff', textShadow: '0 0 3px #00f, 0 0 5px #00f', letterSpacing: '-1px', flexShrink: 0 }}>PG</div>;
+    if (provider === 'JDB') return <div style={{ fontSize: '14px', fontWeight: '900', color: '#d32f2f', textShadow: '1px 1px 0 #ffcc00, -1px -1px 0 #ffcc00, 1px -1px 0 #ffcc00, -1px 1px 0 #ffcc00', fontStyle: 'italic', flexShrink: 0 }}>JDB</div>;
+    if (provider === 'WG') return <div style={{ fontSize: '14px', fontWeight: '900', flexShrink: 0 }}><span style={{color:'#4caf50'}}>W</span><span style={{color:'#2196f3'}}>G</span></div>;
+    if (provider === 'MG') return <div style={{ width: '22px', height: '22px', borderRadius: '50%', border: '2px solid #00bcd4', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00bcd4', fontSize: '12px', fontWeight: 'bold', flexShrink: 0 }}>M</div>;
+    if (provider === 'BNG') return <div style={{ width: '22px', height: '22px', borderRadius: '50%', border: '2px solid #4caf50', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4caf50', fontSize: '12px', fontWeight: 'bold', flexShrink: 0 }}>b</div>;
+    if (provider === 'CQ9') return <div style={{ fontSize: '14px', fontWeight: '900', color: '#ffb300', flexShrink: 0 }}>CQ9</div>;
+    if (provider === 'YellowBat') return <div style={{ fontSize: '14px', fontWeight: '900', color: '#ffeb3b', flexShrink: 0 }}>YB</div>;
+    if (provider === 'NolimitCity') return <div style={{ fontSize: '10px', fontWeight: '900', flexShrink: 0, display: 'flex', flexDirection: 'column', lineHeight: 1 }}><span style={{color:'#ffeb3b'}}>NOLIMIT</span><span style={{color:'#fff'}}>CITY</span></div>;
+    if (provider === 'Playtech') return <div style={{ width: '22px', height: '14px', borderRadius: '50%', border: '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '10px', flexShrink: 0, fontStyle: 'italic' }}>PT</div>;
+    if (provider === 'Big Time Gaming') return <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d32f2f', fontSize: '8px', fontWeight: 'bold', flexShrink: 0 }}>BTG</div>;
+    if (provider === 'NetEnt') return <div style={{ fontSize: '12px', fontWeight: '900', color: '#4caf50', flexShrink: 0 }}>NET</div>;
+    if (provider === 'RSG') return <div style={{ fontSize: '16px', flexShrink: 0 }}>👑</div>;
+    if (provider === 'DB Slots') return <div style={{ fontSize: '10px', fontWeight: '900', flexShrink: 0, color: '#e91e63', border: '1px solid #e91e63', borderRadius: '4px', padding: '1px 3px' }}>DB</div>;
+    if (provider === 'Redtiger') return <div style={{ fontSize: '16px', flexShrink: 0 }}>🐅</div>;
+    if (provider === 'YGR') return <div style={{ fontSize: '10px', fontWeight: '900', color: '#d32f2f', border: '1px solid #d32f2f', padding: '1px 4px', borderRadius: '10px', flexShrink: 0 }}>YGR</div>;
+    if (provider === 'BBIN') return <div style={{ fontSize: '14px', fontWeight: '900', color: '#f44336', flexShrink: 0 }}>bb<span style={{color:'#fff', fontWeight: 'normal'}}>in</span></div>;
+    if (provider === 'HB') return <div style={{ width: '18px', height: '20px', background: '#ff5722', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '10px', fontWeight: 'bold', flexShrink: 0, clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>HB</div>;
+    if (provider === 'CHOICE') return <div style={{ fontSize: '9px', fontWeight: '900', color: '#fff', border: '1px solid #4caf50', borderRadius: '4px', padding: '1px 3px', flexShrink: 0 }}>CHOICE</div>;
+    if (provider === 'VA') return <div style={{ fontSize: '14px', fontWeight: '900', color: '#00bcd4', flexShrink: 0, fontStyle: 'italic' }}>VA</div>;
+    if (provider === 'MW') return <div style={{ fontSize: '14px', fontWeight: '900', color: '#ffeb3b', flexShrink: 0, textShadow: '0 0 2px #fff' }}>MW</div>;
+    if (provider === 'BGaming') return <div style={{ width: '16px', height: '16px', background: '#ffeb3b', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', flexShrink: 0, borderRadius: '2px' }}>B</div>;
+    
+    return <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fff' }}>{provider.slice(0,3)}</div>;
+  };
 
   const launch = async (game: Game) => {
+    if (!user) {
+      setAuthError('');
+      setModal('register');
+      return;
+    }
+    
     if (game.name === 'Dragon Tiger') {
       setView('dragon-tiger')
       return
     }
-    const session = await mockGameProvider.launchGame(game.id)
-    window.alert(`Demo session ready for ${game.name}\n${session.sessionUrl}`)
+    try {
+      const session = await liveGameProvider.launchGame(game.id)
+      if (session.sessionUrl) {
+        window.location.href = session.sessionUrl; // Use full page redirect as it's an external provider game
+      }
+    } catch (error) {
+      console.error("Failed to launch game", error)
+    }
   }
+
+  const handleRegister = async () => {
+    setAuthError('');
+    if (!authForm.email.trim() || !authForm.phone.trim()) {
+      return setAuthError('Email and phone number are both required.');
+    }
+    if (authForm.password !== authForm.confirmPassword) {
+      return setAuthError('Passwords do not match.');
+    }
+    setAuthLoading(true);
+    try {
+      const res = await fetch(import.meta.env.VITE_API_URL + '/v1/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: authForm.email,
+          phone: authForm.phone,
+          password: authForm.password,
+          confirmPassword: authForm.confirmPassword,
+          referralCode: authForm.referralCode || undefined
+        })
+      });
+      const data = await res.json();
+      if (data.status === 'SUCCESS') {
+        setAuthForm({
+          ...authForm,
+          identifier: authForm.email,
+          password: '',
+          confirmPassword: ''
+        });
+        setAuthError('');
+        setModal('login');
+      } else {
+        setAuthError(data.message || 'Registration failed');
+      }
+    } catch (e) {
+      setAuthError('Something went wrong. Please try again.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogin = async () => {
+    setAuthError('');
+    if (!authForm.identifier.trim() || !authForm.password) {
+      return setAuthError('Enter your email or phone number and password.');
+    }
+    setAuthLoading(true);
+    try {
+      const res = await fetch(import.meta.env.VITE_API_URL + '/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: authForm.identifier, password: authForm.password })
+      });
+      const data = await res.json();
+      if (data.status === 'SUCCESS') {
+        localStorage.setItem('token', data.token);
+        setUser(data.user);
+        setModal(null);
+        setAuthForm({ email: '', phone: '', identifier: '', password: '', confirmPassword: '', referralCode: '' });
+      } else {
+        setAuthError(data.message || 'Login failed');
+      }
+    } catch (e) {
+      setAuthError('Something went wrong. Please try again.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+    setView('profile');
+  };
 
   if (view === 'dragon-tiger') {
     return <DragonTigerGame onClose={() => setView('home')} />
@@ -84,31 +613,306 @@ function App() {
   return (
     <div className="viewport">
       <div className="app-shell">
-        <div className="promo-strip"><Gift size={16} /><span>Welcome bonus: <b>100% up to $500</b></span><button onClick={() => setModal('deposit')}>Claim now <ChevronRight size={14} /></button><button className="icon-button close-promo" aria-label="Close promotion"><X size={15} /></button></div>
-        <header className="header">
-          <div className="brand"><span className="brand-mark"><Sparkles size={19} /></span><span>ORBIT<span className="brand-accent">PLAY</span></span></div>
-          <div className="header-actions"><button className="icon-button"><Bell size={19} /></button><button className="icon-button" onClick={() => document.getElementById('game-search')?.focus()}><Search size={20} /></button><button className="login-button" onClick={() => setModal('login')}>Log in</button></div>
+        {!activeProvider && (
+          <div className="promo-strip" style={{ background: '#092562', color: '#f4c35a', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 15px' }}>
+            <button className="icon-button" style={{ color: '#8898c6' }}><X size={16} /></button>
+            <span style={{ fontSize: '13px', fontWeight: '700', letterSpacing: '0.5px' }}>
+              <span style={{ fontSize: '16px', marginRight: '5px', verticalAlign: '-2px' }}>📲</span> 
+              Download App Bonus ₹37
+            </span>
+            <button style={{ background: '#f4c35a', color: '#16142b', padding: '4px 10px', borderRadius: '4px', fontWeight: 'bold', fontSize: '11px' }}>Download now</button>
+          </div>
+        )}
+        <header className="header" style={activeProvider ? { top: 0 } : {}}>
+          {activeProvider ? (
+            <div style={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <button onClick={() => setActiveProvider(null)} style={{ background: 'transparent', border: 'none', color: '#fff', padding: 0, display: 'flex', alignItems: 'center' }}>
+                  <ChevronRight style={{ transform: 'rotate(180deg)' }} />
+                </button>
+                <div className="brand" style={{ gap: '0' }}>
+                  <div style={{ width: '40px', height: '40px', overflow: 'hidden', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <img src="/logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                  </div>
+                  <span style={{ marginLeft: '10px' }}>MALTI<span className="brand-accent">PLAYX</span></span>
+                </div>
+              </div>
+              <button onClick={() => setShowCategoryDropdown(!showCategoryDropdown)} style={{ background: 'transparent', border: 'none', color: '#fff', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '15px', fontWeight: 'bold' }}>
+                {categories.find(c => c.id === activeCategory)?.label || 'Slot'} <ChevronRight size={14} style={{ transform: showCategoryDropdown ? 'rotate(-90deg)' : 'rotate(90deg)', transition: 'transform 0.2s' }} />
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="brand">
+                <div style={{ width: '40px', height: '40px', overflow: 'hidden', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <img src="/logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                </div>
+                <span style={{ marginLeft: '10px' }}>MALTI<span className="brand-accent">PLAYX</span></span>
+              </div>
+              <div className="header-actions">
+                <button className="icon-button"><Bell size={19} /></button>
+                <button className="icon-button" onClick={() => document.getElementById('game-search')?.focus()}><Search size={20} /></button>
+                {user ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.1)', padding: '5px 10px', borderRadius: '20px', fontSize: '14px' }}>
+                      <WalletCards size={14} style={{ display: 'inline', marginRight: '5px', verticalAlign: '-2px' }} />
+                      {user.balance.toFixed(2)}
+                    </div>
+                    <button type="button" aria-label="Open profile" onClick={() => setView('profile')} style={{ width: '30px', height: '30px', padding: 0, borderRadius: '50%', overflow: 'hidden', border: '1px solid #f4c35a', background: 'transparent', cursor: 'pointer' }}>
+                      <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id || 'User'}&backgroundColor=f4c35a`} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', color: 'transparent' }} />
+                    </button>
+                    <button className="outline-action" onClick={handleLogout}>Logout</button>
+                  </div>
+                ) : (
+                  <button className="login-button" onClick={() => setModal('login')}>Log in</button>
+                )}
+              </div>
+            </>
+          )}
+
+          {showCategoryDropdown && activeProvider && (
+            <div style={{ position: 'absolute', top: '76px', left: 0, right: 0, background: '#0a0f2c', zIndex: 10, padding: '20px 15px', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px', borderBottom: '1px solid rgba(143, 157, 215, 0.2)', boxShadow: '0 15px 30px rgba(0,0,0,0.6)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                {[...categories, { id: 'recent', label: 'Recent', icon: <span style={{fontSize:'14px'}}>🕒</span> }, { id: 'favorites', label: 'Favorite', icon: <span style={{fontSize:'14px', color: '#f4c35a'}}>⭐</span> }].map(cat => {
+                  const isActive = activeCategory === cat.id;
+                  return (
+                    <button 
+                      key={cat.id}
+                      onClick={() => {
+                        setActiveCategory(cat.id);
+                        setShowCategoryDropdown(false);
+                        setActiveProvider(null);
+                        setTimeout(() => document.getElementById(`category-${cat.id}`)?.scrollIntoView({ behavior: 'smooth' }), 100);
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '10px 4px', borderRadius: '8px', border: isActive ? 'none' : '1px solid rgba(143, 157, 215, 0.3)', background: isActive ? '#fde3a7' : 'transparent', color: isActive ? '#16142b' : '#ccd6f6', fontSize: '11px', fontWeight: 'bold', flexDirection: 'row', wordBreak: 'break-word', lineHeight: '1.2' }}
+                    >
+                      {(cat as any).image ? (
+                        <div style={{ width: '18px', height: '18px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }}>
+                          <div style={{ width: '100%', height: '100%', backgroundImage: `url(${(cat as any).image})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                        </div>
+                      ) : (
+                        cat.icon
+                      )}
+                      <span>{cat.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </header>
+        
+        {view === 'promos'
+          ? <InvitePromoPage user={user} onHome={() => setView('home')} onLogin={() => setModal('login')} onOpenDeposit={openDeposit} />
+          : view === 'vip'
+            ? <VipPage user={user} onHome={() => setView('home')} onLogin={() => setModal('login')} />
+            : view === 'profile'
+              ? <ProfilePage user={user} onHome={() => setView('home')} onLogin={() => setModal('login')} onLogout={handleLogout} onDeposit={openDeposit} onBalanceUpdate={updateWalletBalance} />
+              : view === 'fairplay'
+                ? <FairPlayPage onHome={() => setView('home')} />
+                : view === 'support'
+                  ? <SupportPage whatsappNumber={supportWhatsApp} onHome={() => setView('home')} />
+                  : <main className="main-content" style={activeProvider ? { paddingTop: '10px' } : undefined}>
+          {!activeProvider && (
+            <>
+              <section className="banner-slider" style={{ position: 'relative', overflow: 'hidden', borderRadius: '14px', marginBottom: '20px', aspectRatio: '21/9' }}>
+                <div ref={sliderRef} style={{ display: 'flex', width: '100%', height: '100%', overflowX: 'auto', scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}>
+                  {[1, 2, 3].map((item) => (
+                    <div key={item} style={{ flex: '0 0 100%', height: '100%', scrollSnapAlign: 'start', backgroundImage: `url(https://picsum.photos/seed/banner${item}/800/400)`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                      <div style={{ padding: '20px', background: 'linear-gradient(90deg, rgba(0,0,0,0.8), transparent)', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <h2 style={{ color: '#f4c35a', margin: '0 0 5px', fontSize: '24px', fontStyle: 'italic', fontWeight: '900' }}>VIP Union</h2>
+                        <p style={{ margin: 0, fontSize: '14px', fontWeight: 'bold' }}>Your <span style={{ color: '#f4c35a' }}>777777rs</span> Bonus</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ position: 'absolute', bottom: '10px', left: '0', right: '0', display: 'flex', justifyContent: 'center', gap: '5px' }}>
+                  {[0,1,2].map(i => <div key={i} style={{ width: '8px', height: '8px', borderRadius: '50%', background: i===bannerIndex ? '#fff' : 'rgba(255,255,255,0.4)', transition: 'background 0.3s' }} />)}
+                </div>
+              </section>
 
-        {view === 'promos' ? <PromoPage onOpenDeposit={() => setModal('deposit')} /> : <main className="main-content">
-          <section className="hero-banner">
-            <div className="hero-copy"><p className="eyebrow"><Zap size={13} /> LIMITED TIME EVENT</p><h1>Play bold.<br /><em>Win brighter.</em></h1><p className="hero-description">Your next lucky moment is waiting in the Orbit.</p><button className="gold-button" onClick={() => setModal('deposit')}>Play now <ChevronRight size={17} /></button></div>
-            <div className="hero-orbit"><div className="orbit-ring ring-one" /><div className="orbit-ring ring-two" /><div className="hero-coin">✦</div><div className="hero-star star-one">✦</div><div className="hero-star star-two">✧</div></div>
+              <div style={{ display: 'flex', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(143, 157, 215, 0.17)' }}>
+                <Volume2 size={18} color="#6670a1" style={{ flexShrink: 0, marginRight: '10px' }} />
+                <Marquee style={{ color: '#f4c35a', fontSize: '12px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+                  Welcome to MaltiplayX, a hall of fortune and a cradle of huge prizes! 🎰🔥 Here, not only are the winning rates incredibly high, but every spin could bring a surprise! Convenient deposits and lightning-fast, secure, and stable withdrawals ensure worry-free gaming. 💎 Join MaltiplayX now and start your journey to wealth. The next big prize winner could be you! 📣
+                </Marquee>
+                <Mail size={18} color="#6670a1" style={{ flexShrink: 0, marginLeft: '10px' }} />
+              </div>
+
+              <section className="section-block grand-prize-section" style={{ marginTop: '10px' }}>
+                <div style={{ textAlign: 'center', marginBottom: '15px' }}>
+                  <span style={{ color: '#6670a1', fontSize: '14px' }}>✦ ✦ <strong style={{ color: '#fff', fontSize: '16px', margin: '0 10px', letterSpacing: '0.5px' }}>Grand Prize Record</strong> ✦ ✦</span>
+                </div>
+                <Marquee scrollamount="4">
+                  <div style={{ display: 'grid', gridTemplateRows: 'auto auto', gridAutoFlow: 'column', gap: '10px', paddingBottom: '5px' }}>
+                    {[...winners, ...winners].map((winner, idx) => (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(143, 157, 215, 0.2)', padding: '6px 12px', borderRadius: '8px', minWidth: '180px' }}>
+                        <img src={winner.image} style={{ width: '40px', height: '40px', borderRadius: '6px', marginRight: '10px' }} />
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontSize: '12px', color: '#fff' }}><span style={{ color: '#00d13b' }}>Congrats </span>{winner.user}</span>
+                          <span style={{ fontSize: '13px', color: '#fff', marginTop: '2px', fontWeight: 'bold' }}>win <span style={{ color: '#f4c35a' }}>{winner.amount}</span></span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Marquee>
+              </section>
+
+              <section className="quick-actions"><button onClick={() => setView('promos')}><span className="quick-icon gold"><Gift size={19} /></span><span>Promos</span></button><button onClick={() => setView('vip')}><span className="quick-icon blue"><Trophy size={19} /></span><span>VIP club</span></button><button onClick={openSupport}><span className="quick-icon pink"><Headphones size={19} /></span><span>Support</span></button><button onClick={() => setView('fairplay')}><span className="quick-icon green"><ShieldCheck size={19} /></span><span>Fair play</span></button></section>
+            </>
+          )}
+          <section className="section-block games-section" style={{ display: 'flex', gap: activeProvider ? '15px' : '0', alignItems: 'flex-start', margin: activeProvider ? '0' : '20px -15px 0', padding: '0 15px' }}>
+            {activeProvider && (
+              <div ref={sidebarRef} className="category-sidebar" style={{ display: 'flex', flexDirection: 'column', width: '100px', flexShrink: 0, gap: '8px', maxHeight: 'calc(100vh - 140px)', overflowY: 'auto', paddingRight: '5px', paddingBottom: '100px', position: 'sticky', top: '110px', zIndex: 5 }}>
+                {dynamicProviders.map(provider => (
+                  <button
+                    id={`provider-btn-${provider}`}
+                    key={provider}
+                    onClick={() => {
+                      setActiveProvider(provider);
+                      setProviderGameFilter('All');
+                      setProviderTab('All');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 8px', background: activeProvider === provider ? 'rgba(255,255,255,0.08)' : 'transparent', border: activeProvider === provider ? '1px solid rgba(244,195,90,0.5)' : '1px solid transparent', borderRadius: '8px', color: activeProvider === provider ? '#f4c35a' : '#ccd6f6', cursor: 'pointer', textAlign: 'left', fontSize: '11px', fontWeight: 'bold', transition: 'all 0.2s' }}
+                  >
+                    {renderProviderLogo(provider)}
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{provider}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            
+            <div className="game-content" style={{ flexGrow: 1, minWidth: 0 }}>
+              <div className="search-wrap" style={{ marginBottom: '15px' }}>
+                <Search size={17} />
+                <input id="game-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search games" />
+                {search && <button className="clear-search" onClick={() => setSearch('')}><X size={14} /></button>}
+              </div>
+              
+              {loading ? (
+                <div className="game-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>{[1, 2, 3, 4, 5, 6].map((item) => <div className="game-card skeleton" key={item} style={{ aspectRatio: '1/1', borderRadius: '12px' }} />)}</div>
+              ) : search ? (
+                filteredGames.length ? (
+                  <div className="game-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
+                    {filteredGames.map(renderGameCard)}
+                  </div>
+                ) : (
+                  <div className="empty-state" style={{ textAlign: 'center', padding: '30px 0', color: '#8898c6' }}><Search size={25} style={{ margin: '0 auto 10px' }} /><b>No games found</b></div>
+                )
+              ) : (
+                activeProvider ? (
+                  <div className="category-section" style={{ paddingTop: '10px' }}>
+                    <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', marginBottom: '20px', paddingBottom: '5px', scrollbarWidth: 'none' }}>
+                      {['All', 'Hot', 'Recent', 'Favorites'].map(f => (
+                         <button key={f} onClick={() => setProviderTab(f)} style={{ flex: '1 0 auto', padding: '8px 16px', background: f === providerTab ? '#fde3a7' : 'transparent', color: f === providerTab ? '#000' : '#8898c6', borderRadius: '8px', border: f === providerTab ? 'none' : '1px solid rgba(255,255,255,0.1)', fontSize: '12px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>{f}</button>
+                      ))}
+                    </div>
+                    <div className="provider-category-filters" aria-label="Filter provider games by type">
+                      {(['All', 'Slots', 'Aviator', 'Dragon Tiger', 'Triple 7', 'Suspended'] as const).map(filter => (
+                        <button
+                          key={filter}
+                          type="button"
+                          className={providerGameFilter === filter ? 'active' : ''}
+                          onClick={() => {
+                            setProviderGameFilter(filter);
+                            setProviderTab('All');
+                            setSearch('');
+                          }}
+                        >
+                          {filter}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="game-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                      {providerGames.length
+                        ? providerGames.map(renderGameCard)
+                        : <div className="empty-state" style={{ gridColumn: '1 / -1' }}><b>No games in this list</b><span>Try another filter.</span></div>}
+                    </div>
+                    <div style={{ textAlign: 'center', marginTop: '20px', padding: '15px 0' }}>
+                      <button style={{ background: 'transparent', border: 'none', color: '#8898c6', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', width: '100%' }}>
+                        Expand <ChevronRight size={14} style={{ transform: 'rotate(90deg)' }} />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="home-category-browser">
+                    <div className="home-category-avatars" aria-label="Game categories">
+                      {homeCategoryOptions.map(option => (
+                        <button
+                          type="button"
+                          key={option.id}
+                          className={`home-category-avatar${activeCategory === option.id ? ' active' : ''}`}
+                          onClick={() => {
+                            setActiveCategory(option.id);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          aria-pressed={activeCategory === option.id}
+                        >
+                          <img src={option.image} alt="" />
+                          <span>{option.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {(() => {
+                      const selectedCategory = homeCategoryOptions.find(option => option.id === activeCategory) ?? homeCategoryOptions[0];
+                      const selectedGames = selectedCategory ? getHomeCategoryGames(selectedCategory.id) : [];
+                      return (
+                        <section id={`category-${selectedCategory?.id ?? 'slots'}`} className="category-section selected-home-category">
+                          <div className="selected-category-heading">
+                            <h2>{selectedCategory?.label} ({selectedGames.length})</h2>
+                            <div className="currency-filter">
+                              <button className={inrFilter ? 'active' : ''} onClick={() => setInrFilter(true)}>INR Available</button>
+                              <button className={!inrFilter ? 'active' : ''} onClick={() => setInrFilter(false)}>All</button>
+                            </div>
+                          </div>
+                          <div className="game-grid home-games-grid">
+                            {selectedGames.length
+                              ? selectedGames.map(renderGameCard)
+                              : <div className="empty-state" style={{ gridColumn: '1 / -1' }}><b>No active games in this category</b></div>}
+                          </div>
+                        </section>
+                      );
+                    })()}
+                    {loadingMore && (
+                      <div className="game-grid home-games-grid" style={{ marginTop: '15px' }}>
+                        {[1, 2, 3, 4].map((item) => <div className="game-card skeleton" key={`skel-${item}`} style={{ aspectRatio: '1/1', borderRadius: '12px' }} />)}
+                      </div>
+                    )}
+                  </div>
+                )
+              )}
+            </div>
           </section>
-
-          <div className="announcement"><div className="announcement-icon"><Bell size={14} /></div><span>Congratulations to <b>m***r</b> for winning <strong>$2,480.00</strong></span><ChevronRight size={15} /></div>
-
-          <section className="section-block winners-section"><div className="section-heading"><div><p className="eyebrow">LIVE ACTIVITY</p><h2>Recent winners</h2></div><button className="text-button">View all <ChevronRight size={15} /></button></div><div className="winner-row">{winners.map((winner) => <div className="winner-card" key={winner.user}><div className="winner-avatar">{winner.user.charAt(0).toUpperCase()}</div><div className="winner-info"><b>{winner.user}</b><span>{winner.game}</span></div><div className="winner-amount"><b>{winner.amount}</b><span>{winner.time}</span></div></div>)}</div></section>
-
-          <section className="quick-actions"><button onClick={() => setModal('deposit')}><span className="quick-icon gold"><Gift size={19} /></span><span>Promos</span></button><button><span className="quick-icon blue"><Trophy size={19} /></span><span>VIP club</span></button><button><span className="quick-icon pink"><Headphones size={19} /></span><span>Support</span></button><button><span className="quick-icon green"><ShieldCheck size={19} /></span><span>Fair play</span></button></section>
-
-          <section className="section-block games-section"><div className="section-heading"><div><p className="eyebrow">EXPLORE THE LOBBY</p><h2>Games for you</h2></div><button className="text-button">All games <ChevronRight size={15} /></button></div><div className="search-wrap"><Search size={17} /><input id="game-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search games" />{search && <button className="clear-search" onClick={() => setSearch('')}><X size={14} /></button>}</div><div className="category-tabs">{categories.map((category) => <button className={activeCategory === category.id ? 'active' : ''} onClick={() => setActiveCategory(category.id)} key={category.id}><span>{category.icon}</span>{category.label}</button>)}</div>{loading ? <div className="game-grid">{[1, 2, 3, 4].map((item) => <div className="game-card skeleton" key={item} />)}</div> : filteredGames.length ? <div className="game-grid">{filteredGames.map((game) => <article className="game-card" key={game.id} onClick={() => launch(game)}><div className="game-image"><img src={game.image} alt="" /><div className="image-shade" /><span className="provider-label">{game.provider}</span><button className={`favorite ${favorites.includes(game.id) ? 'selected' : ''}`} onClick={(event) => { event.stopPropagation(); toggleFavorite(game.id) }} aria-label={`Favorite ${game.name}`}><Star size={16} fill={favorites.includes(game.id) ? 'currentColor' : 'none'} /></button>{(game.isHot || game.isNew) && <span className="game-tag">{game.isNew ? 'NEW' : 'HOT'}</span>}<span className="play-icon"><Play size={16} fill="currentColor" /></span></div><div className="game-name"><b>{game.name}</b><span>{game.category}</span></div></article>)}</div> : <div className="empty-state"><Search size={25} /><b>No games found</b><span>Try a different name or category.</span></div>}</section>
         </main>}
 
-        <nav className="bottom-nav"><button className={view === 'home' ? 'active' : ''} onClick={() => setView('home')}><Home size={20} /><span>Home</span></button><button className={view === 'promos' ? 'active' : ''} onClick={() => setView('promos')}><Gift size={20} /><span>Promos</span><i>2</i></button><button className="deposit-nav" onClick={() => setModal('deposit')}><span><Zap size={21} fill="currentColor" /></span><small>Deposit</small></button><button onClick={() => setView('promos')}><Trophy size={20} /><span>VIP</span></button><button onClick={() => setModal('login')}><UserRound size={20} /><span>Profile</span></button></nav>
-        <button className="floating-support" aria-label="Open support"><Headphones size={20} /><span>Live help</span></button>
+        <nav className="bottom-nav"><button className={view === 'home' ? 'active' : ''} onClick={() => setView('home')}><Home size={20} /><span>Home</span></button><button className={view === 'promos' ? 'active' : ''} onClick={() => setView('promos')}><Gift size={20} /><span>Promos</span></button><button className="deposit-nav" onClick={openDeposit}><span><Zap size={21} fill="currentColor" /></span><small>Deposit</small></button><button className={view === 'vip' ? 'active' : ''} onClick={() => setView('vip')}><Trophy size={20} /><span>VIP</span></button><button className={view === 'profile' ? 'active' : ''} onClick={() => setView('profile')}>{user ? <div style={{ width: '22px', height: '22px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #f4c35a' }}><img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id || 'User'}&backgroundColor=f4c35a`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', color: 'transparent' }} /></div> : <UserRound size={20} />}<span>Profile</span></button></nav>
+        <button className="floating-support" aria-label="Open WhatsApp support" onClick={openSupport}><Headphones size={20} /><span>Live help</span></button>
       </div>
-      {modal && <div className="modal-backdrop" onClick={() => setModal(null)}><div className="modal" onClick={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setModal(null)}><X size={18} /></button>{modal === 'login' ? <><p className="eyebrow">WELCOME BACK</p><h2>Ready to play?</h2><p className="modal-copy">Log in to access your balance, favorites, and VIP rewards.</p><label>Email or username<input placeholder="you@example.com" /></label><label>Password<input type="password" placeholder="••••••••" /></label><button className="gold-button full" onClick={() => setModal(null)}>Log in <ChevronRight size={17} /></button><p className="modal-foot">New here? <b onClick={() => setModal(null)}>Create an account</b></p></> : <><div className="deposit-symbol"><Gift size={26} /></div><p className="eyebrow">WELCOME OFFER</p><h2>Start with more.</h2><p className="modal-copy">Demo mode is active. A secure wallet provider can be connected here later.</p><div className="offer-row"><span>100% match bonus</span><b>Up to $500</b></div><button className="gold-button full" onClick={() => setModal(null)}>Explore demo games <ChevronRight size={17} /></button></>}</div></div>}
+      {modal && <div className="modal-backdrop" onClick={() => setModal(null)}><div className="modal" onClick={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setModal(null)}><X size={18} /></button>
+      {modal === 'login' ? <>
+        <p className="eyebrow">WELCOME BACK</p><h2>Log in to play</h2><p className="modal-copy">Use the email or phone number on your account.</p>
+        {authError && <p role="alert" style={{ color: '#ff7777', marginBottom: '10px' }}>{authError}</p>}
+        <label>Email or phone number<input type="text" autoComplete="username" placeholder="name@example.com or phone number" value={authForm.identifier} onChange={(e) => setAuthForm({...authForm, identifier: e.target.value})} /></label>
+        <label>Password<input type="password" autoComplete="current-password" placeholder="Enter your password" value={authForm.password} onChange={(e) => setAuthForm({...authForm, password: e.target.value})} onKeyDown={(e) => { if (e.key === 'Enter') void handleLogin(); }} /></label>
+        <button className="gold-button full" onClick={handleLogin} disabled={authLoading}>{authLoading ? 'Logging in...' : <>Log in <ChevronRight size={17} /></>}</button>
+        <p className="modal-foot">New here? <b onClick={() => { setAuthError(''); setModal('register'); }} style={{ cursor: 'pointer', textDecoration: 'underline' }}>Create an account</b></p>
+      </> : modal === 'register' ? <>
+        <p className="eyebrow">CREATE ACCOUNT</p><h2>Join Maltiplayx</h2><p className="modal-copy">Create an account to access games and your wallet.</p>
+        {authError && <p role="alert" style={{ color: '#ff7777', marginBottom: '10px' }}>{authError}</p>}
+        <label>Email address<input type="email" autoComplete="email" placeholder="name@example.com" value={authForm.email} onChange={(e) => setAuthForm({...authForm, email: e.target.value})} /></label>
+        <label>Phone number<input type="tel" autoComplete="tel" placeholder="e.g. +919876543210" value={authForm.phone} onChange={(e) => setAuthForm({...authForm, phone: e.target.value})} /></label>
+        <label>Invite code (optional)<input type="text" placeholder="Enter your friend's code" maxLength={10} autoComplete="off" value={authForm.referralCode} onChange={(e) => setAuthForm({...authForm, referralCode: e.target.value.toUpperCase()})} /></label>
+        <p className="referral-signup-note">Use a friend’s invite code to receive ₹30 after your first successful login.</p>
+        <label>Password<input type="password" autoComplete="new-password" minLength={8} maxLength={128} placeholder="At least 8 characters" value={authForm.password} onChange={(e) => setAuthForm({...authForm, password: e.target.value})} /></label>
+        <label>Confirm password<input type="password" autoComplete="new-password" minLength={8} maxLength={128} placeholder="Re-enter your password" value={authForm.confirmPassword} onChange={(e) => setAuthForm({...authForm, confirmPassword: e.target.value})} onKeyDown={(e) => { if (e.key === 'Enter') void handleRegister(); }} /></label>
+        <button className="gold-button full" onClick={handleRegister} disabled={authLoading}>{authLoading ? 'Creating...' : <>Register <ChevronRight size={17} /></>}</button>
+        <p className="auth-privacy-note">Your password is securely hashed and is never visible to staff.</p>
+        <p className="modal-foot">Already have an account? <b onClick={() => { setAuthError(''); setModal('login'); }} style={{ cursor: 'pointer', textDecoration: 'underline' }}>Log in</b></p>
+      </> : <>
+        <DepositWorkflow onClose={() => setModal(null)} onRequestLogin={() => setModal('register')} user={user} onBalanceUpdate={updateWalletBalance} />
+      </>}
+      </div></div>}
     </div>
   )
 }

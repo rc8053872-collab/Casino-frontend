@@ -14,9 +14,9 @@ async function testGameLaunch() {
 
     // Test karne ke liye dummy player data
     const payload = {
-        reseller_id: RESELLER_ID,
+        reseller_id: 306,
         player_id: "player_test_001",
-        game_uid: "spribe_aviator", // Kisi bhi game ka code jo aapke catalog me ho
+        game_uid: process.argv[2] || "spribe_aviator",
         mode: "seamless",
         currency_code: "INR",
         home_url: "https://maltiplayx.com"
@@ -29,7 +29,11 @@ async function testGameLaunch() {
         const response = await fetch(launchUrl, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Origin': 'https://maltiplayx.com',
+                'Referer': 'https://maltiplayx.com/',
+                'X-API-Token': 'bfc369fd4098461aa92ca32987be5668',
+                'X-Secret-Key': '6d7460454585e11d17cac11f553275ef6d89756adfdb97b7fafe88cec1466dbe'
             },
             body: JSON.stringify(payload)
         });
