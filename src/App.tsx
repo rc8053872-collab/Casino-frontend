@@ -717,28 +717,49 @@ function App() {
                   <Search size={19} />
                 </button>
 
-                <div
-                  className="malt-wallet-pill"
-                  onClick={openDeposit}
-                  title="Click to deposit funds"
-                >
-                  <WalletCards size={14} color="#8e9bc7" />
-                  <span className="malt-wallet-amount">
-                    ₹{user ? Number(user.balance).toLocaleString('en-IN') : '1,000'}
-                  </span>
-                  <span className="malt-wallet-plus">+</span>
-                </div>
+                {user ? (
+                  <>
+                    <div
+                      className="malt-wallet-pill"
+                      onClick={openDeposit}
+                      title="Click to deposit funds"
+                    >
+                      <WalletCards size={14} color="#8e9bc7" />
+                      <span className="malt-wallet-amount">
+                        ₹{Number(user.balance || 0).toLocaleString('en-IN')}
+                      </span>
+                      <span className="malt-wallet-plus">+</span>
+                    </div>
 
-                <div
-                  className="malt-avatar-box"
-                  onClick={() => user ? setView('profile') : setModal('login')}
-                  title={user ? 'Open Profile' : 'Click to Log in'}
-                >
-                  <img
-                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'MaltiQueen'}&backgroundColor=f4c35a`}
-                    alt="Avatar"
-                  />
-                </div>
+                    <div
+                      className="malt-avatar-box"
+                      onClick={() => setView('profile')}
+                      title="Open Profile"
+                    >
+                      <img
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}&backgroundColor=f4c35a`}
+                        alt="Avatar"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="malt-auth-actions">
+                    <button
+                      type="button"
+                      className="malt-login-btn"
+                      onClick={() => { setAuthError(''); setModal('login'); }}
+                    >
+                      Login
+                    </button>
+                    <button
+                      type="button"
+                      className="malt-signup-btn"
+                      onClick={() => { setAuthError(''); setModal('register'); }}
+                    >
+                      Sign Up
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           )}

@@ -4082,6 +4082,51 @@ button {
   object-fit: cover;
 }
 
+.malt-auth-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.malt-login-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ccd6f6;
+  border: 1px solid rgba(143, 157, 215, 0.3);
+  border-radius: 8px;
+  padding: 6px 11px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.malt-login-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.malt-signup-btn {
+  background: var(--malt-gold);
+  color: #16142b;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(244, 195, 90, 0.35);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.malt-signup-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
 /* 3. Hero Promotional Banner */
 .malt-hero-section {
   padding: 10px 14px 4px;
