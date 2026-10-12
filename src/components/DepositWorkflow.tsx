@@ -36,7 +36,7 @@ export function DepositWorkflow({ onClose, onRequestLogin, user, onBalanceUpdate
   const [submitting, setSubmitting] = useState(false);
   const userId = user?.id;
   const amountNumber = Number(amount);
-  const amountIsValid = Number.isInteger(amountNumber) && amountNumber >= 1 && amountNumber <= 10000;
+  const amountIsValid = Number.isInteger(amountNumber) && amountNumber >= 100 && amountNumber <= 10000;
 
   useEffect(() => {
     let active = true;
@@ -84,7 +84,7 @@ export function DepositWorkflow({ onClose, onRequestLogin, user, onBalanceUpdate
     }
 
     if (!amountIsValid) {
-      setMessage('Enter a whole amount from ₹1 to ₹10,000.');
+      setMessage('Enter a whole amount from ₹100 to ₹10,000.');
       setMessageIsError(true);
       return;
     }
@@ -192,15 +192,15 @@ export function DepositWorkflow({ onClose, onRequestLogin, user, onBalanceUpdate
               : 'Demo submission is disabled until the backend uses an isolated local development database.'}
           </div>}
           {step === 1 ? <>
-            <p className="deposit-limits">Choose an amount: ₹1 minimum · ₹10,000 maximum</p>
+            <p className="deposit-limits">Choose an amount: ₹100 minimum · ₹10,000 maximum</p>
             <div className="deposit-quick-amounts" aria-label="Choose deposit amount">
-              {[1, 10, 100, 500, 1000, 5000].map(value => (
+              {[100, 500, 1000, 2000, 5000, 10000].map(value => (
                 <button type="button" key={value} className={Number(amount) === value ? 'active' : ''} onClick={() => setAmount(String(value))}>
                   ₹{value.toLocaleString('en-IN')}
                 </button>
               ))}
             </div>
-            <label>Amount (₹)<input type="number" min="1" max="10000" step="1" inputMode="numeric" placeholder="1–10,000" value={amount} onChange={event => setAmount(event.target.value)} /></label>
+            <label>Amount (₹)<input type="number" min="100" max="10000" step="1" inputMode="numeric" placeholder="100–10,000" value={amount} onChange={event => setAmount(event.target.value)} /></label>
             {!user && <div className="deposit-login-prompt">
               <span>Log in to submit a deposit request and view its status.</span>
               <button type="button" onClick={onRequestLogin}>Log in</button>
@@ -217,7 +217,7 @@ export function DepositWorkflow({ onClose, onRequestLogin, user, onBalanceUpdate
                   return;
                 }
                 if (!amountIsValid) {
-                  setMessage('Enter a whole amount from ₹1 to ₹10,000.');
+                  setMessage('Enter a whole amount from ₹100 to ₹10,000.');
                   setMessageIsError(true);
                   return;
                 }

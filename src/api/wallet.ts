@@ -47,9 +47,18 @@ export interface WithdrawalBankDetails {
   branchName: string;
 }
 
+export interface WithdrawalResponse {
+  message: string;
+  transaction: Transaction;
+  originalAmount?: number;
+  feePercent?: number;
+  feeAmount?: number;
+  finalAmount?: number;
+}
+
 export const submitWithdrawal = (
   amount: number,
   bankDetails: WithdrawalBankDetails
-): Promise<{ message: string; transaction: Transaction }> => {
+): Promise<WithdrawalResponse> => {
   return apiClient.post('/wallet/withdraw', { amount, ...bankDetails });
 };

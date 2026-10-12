@@ -37,6 +37,7 @@ import { getBalance, getPaymentSettings, getTransactions, submitWithdrawal, Tran
 
 interface Member {
   id: string;
+  username?: string | null;
   phone: string | null;
   email?: string | null;
   balance: number;
@@ -106,7 +107,7 @@ export function ProfileDashboard({
 
   // Modal states
   const [activeModal, setActiveModal] = useState<
-    'withdraw' | 'history' | 'editProfile' | 'security' | 'kyc' | 'bank' | 'notifications' | 'faq' | 'logout' | null
+    'withdraw' | 'withdrawSuccess' | 'history' | 'editProfile' | 'security' | 'kyc' | 'bank' | 'notifications' | 'faq' | 'logout' | null
   >(null);
 
   // Copy feedback
@@ -129,8 +130,20 @@ export function ProfileDashboard({
   const [branchName, setBranchName] = useState(() => localStorage.getItem('user_bank_branch') || '');
   const [submittingWithdrawal, setSubmittingWithdrawal] = useState(false);
   const [feePercent, setFeePercent] = useState(0);
+  const [withdrawReceipt, setWithdrawReceipt] = useState<{
+    originalAmount: number;
+    feePercent: number;
+    feeAmount: number;
+    finalAmount: number;
+    accountNumber: string;
+    ifscCode: string;
+    branchName: string;
+    transactionId?: string;
+    message?: string;
+  } | null>(null);
 
   // Profile Edit state
+  const [editUsername, setEditUsername] = useState(user?.username || '');
   const [editEmail, setEditEmail] = useState(user?.email || '');
   const [editPhone, setEditPhone] = useState(user?.phone || '');
   const [selectedAvatar, setSelectedAvatar] = useState(() => localStorage.getItem('user_avatar') || AVATAR_OPTIONS[0].url);
@@ -162,7 +175,10 @@ export function ProfileDashboard({
   useEffect(() => {
     if (user?.email) setEditEmail(user.email);
     if (user?.phone) setEditPhone(user.phone);
+    if (user?.username) setEditUsername(user.username);
   }, [user]);
+
+  const displayUsername = user?.username || editUsername || (user?.phone ? `Player_${user.phone.slice(-4)}` : user?.email ? user.email.split('@')[0] : 'VIP Player');
 
   // Fetch Payment Settings & Stats
   useEffect(() => {
@@ -274,8 +290,28 @@ export function ProfileDashboard({
       const wallet = await getBalance();
       onBalanceUpdate(wallet.balance);
 
-      showToast(result.message || 'Withdrawal submitted successfully!', 'success');
-      setActiveModal('history');
+      const calculatedFeePercent = result.feePercent !== undefined ? result.feePercent : feePercent;
+      const calculatedFeeAmount = result.feeAmount !== undefined
+        ? result.feeAmount
+        : Math.round(((val * calculatedFeePercent) / 100) * 100) / 100;
+      const calculatedFinalAmount = result.finalAmount !== undefined
+        ? result.finalAmount
+        : Math.round((val - calculatedFeeAmount) * 100) / 100;
+
+      setWithdrawReceipt({
+        originalAmount: val,
+        feePercent: calculatedFeePercent,
+        feeAmount: calculatedFeeAmount,
+        finalAmount: calculatedFinalAmount,
+        accountNumber: accountNumber.trim(),
+        ifscCode: ifscCode.trim(),
+        branchName: branchName.trim(),
+        transactionId: result.transaction?.id || `TXN-${Date.now().toString().slice(-6)}`,
+        message: result.message
+      });
+
+      showToast(result.message || 'Withdrawal request submitted to admin!', 'success');
+      setActiveModal('withdrawSuccess');
       setAmount('');
     } catch (err: any) {
       showToast(err?.error || err?.message || 'Withdrawal request failed.', 'error');
@@ -306,8 +342,11 @@ export function ProfileDashboard({
       localStorage.setItem('user_avatar', selectedAvatar);
       const res = await apiClient.put<{ status: string; message: string; user: any }, { status: string; message: string; user: any }>(
         '/v1/auth/profile',
-        { email: editEmail, phone: editPhone }
+        { email: editEmail, phone: editPhone, username: editUsername }
       );
+      if (res?.user?.username) {
+        setEditUsername(res.user.username);
+      }
       showToast(res.message || 'Profile updated successfully!', 'success');
       setActiveModal(null);
     } catch (err: any) {
@@ -453,8 +492,18 @@ export function ProfileDashboard({
               </button>
             </div>
 
+            {/* User Name */}
+            <div className="mp-identity-name-row">
+              <h2 className="mp-user-name">{displayUsername}</h2>
+              <span className="mp-verified-chip">
+                <ShieldCheck size={11} /> Verified
+              </span>
+            </div>
+
+            {/* Phone Row */}
             <div className="mp-identity-phone-row">
-              <h2 className="mp-masked-phone">{maskPhone(user.phone)}</h2>
+              <span className="mp-phone-label"><Smartphone size={13} /></span>
+              <span className="mp-masked-phone">{maskPhone(user.phone)}</span>
               {user.phone && (
                 <button
                   type="button"
@@ -467,7 +516,10 @@ export function ProfileDashboard({
               )}
             </div>
 
-            <p className="mp-identity-email">{user.email || 'No email attached'}</p>
+            <p className="mp-identity-email">
+              <Mail size={12} style={{ display: 'inline', marginRight: '4px', verticalAlign: '-1px' }} />
+              {user.email || 'No email attached'}
+            </p>
 
             <div className="mp-identity-member-row">
               <span>Member ID: {memberIdFormatted}</span>
@@ -835,10 +887,57 @@ export function ProfileDashboard({
                     onChange={e => setAmount(e.target.value)}
                     required
                   />
-                  {feePercent > 0 && amount && Number(amount) >= 300 && (
-                    <div className="mp-fee-breakdown">
-                      <span>Platform fee ({feePercent}%): ₹{((Number(amount) * feePercent) / 100).toFixed(2)}</span>
-                      <strong>You will receive: ₹{(Number(amount) - (Number(amount) * feePercent) / 100).toFixed(2)}</strong>
+
+                  {/* Quick Amount Chips */}
+                  <div className="mp-quick-amounts">
+                    {[300, 500, 1000, 2000, 5000].map(chip => (
+                      <button
+                        key={chip}
+                        type="button"
+                        className={`mp-amount-chip ${amount === String(chip) ? 'active' : ''}`}
+                        onClick={() => setAmount(String(chip))}
+                      >
+                        ₹{chip}
+                      </button>
+                    ))}
+                    {Number(user.balance || 0) >= 300 && (
+                      <button
+                        type="button"
+                        className={`mp-amount-chip max ${amount === String(Math.floor(user.balance)) ? 'active' : ''}`}
+                        onClick={() => setAmount(String(Math.floor(user.balance)))}
+                      >
+                        All (₹{Math.floor(user.balance)})
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Live Fee & Payout Calculation */}
+                  {Number(amount) >= 300 && (
+                    <div className="mp-fee-breakdown-card">
+                      <div className="mp-breakdown-row">
+                        <span className="mp-breakdown-label">Withdrawal Amount:</span>
+                        <span className="mp-breakdown-val">₹{Number(amount).toFixed(2)}</span>
+                      </div>
+                      <div className="mp-breakdown-row fee">
+                        <span className="mp-breakdown-label">
+                          Admin Platform Fee Cut ({feePercent}%):
+                        </span>
+                        <span className="mp-breakdown-val text-cut">
+                          -₹{((Number(amount) * feePercent) / 100).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="mp-breakdown-divider" />
+                      <div className="mp-breakdown-row total">
+                        <span className="mp-breakdown-label">
+                          <strong>Admin Kitna Payout Karega (Net):</strong>
+                        </span>
+                        <span className="mp-breakdown-val text-payout">
+                          ₹{(Number(amount) - (Number(amount) * feePercent) / 100).toFixed(2)}
+                        </span>
+                      </div>
+                      <p className="mp-fee-note">
+                        ℹ️ Admin panel me request approve hone par <strong>₹{(Number(amount) - (Number(amount) * feePercent) / 100).toFixed(2)}</strong> aapke bank account me credit kiye jayenge.
+                      </p>
                     </div>
                   )}
                 </div>
@@ -888,6 +987,97 @@ export function ProfileDashboard({
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WITHDRAWAL SUCCESS / RECEIPT MODAL */}
+      {activeModal === 'withdrawSuccess' && withdrawReceipt && (
+        <div className="mp-modal-backdrop" onClick={() => setActiveModal(null)}>
+          <div className="mp-modal-sheet" onClick={e => e.stopPropagation()}>
+            <div className="mp-sheet-header">
+              <div className="mp-sheet-title">
+                <ShieldCheck size={20} className="mp-gold-text" />
+                <h3>Withdrawal Submitted</h3>
+              </div>
+              <button type="button" className="mp-close-btn" onClick={() => setActiveModal(null)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="mp-sheet-body">
+              <div className="mp-success-receipt">
+                <div className="mp-success-badge-icon">
+                  <Check size={32} />
+                </div>
+                <h3 className="mp-success-heading">Request Sent to Admin!</h3>
+                <p className="mp-success-subheading">
+                  Aapki withdrawal request Admin Panel me safaltapoorvak bhej di gayi hai.
+                </p>
+
+                <div className="mp-receipt-card">
+                  <div className="mp-receipt-row">
+                    <span>Player Name:</span>
+                    <strong>{displayUsername}</strong>
+                  </div>
+                  <div className="mp-receipt-row">
+                    <span>Requested Amount:</span>
+                    <strong className="text-white">₹{withdrawReceipt.originalAmount.toFixed(2)}</strong>
+                  </div>
+                  <div className="mp-receipt-row fee">
+                    <span>Admin Fee Cut ({withdrawReceipt.feePercent}%):</span>
+                    <strong className="text-warning">-₹{withdrawReceipt.feeAmount.toFixed(2)}</strong>
+                  </div>
+                  <div className="mp-receipt-divider" />
+                  <div className="mp-receipt-row highlight">
+                    <span>Net Transfer to Bank:</span>
+                    <strong className="text-success font-xl">
+                      ₹{withdrawReceipt.finalAmount.toFixed(2)}
+                    </strong>
+                  </div>
+                  <div className="mp-receipt-divider" />
+                  <div className="mp-receipt-row">
+                    <span>Bank Account:</span>
+                    <span>•••• {withdrawReceipt.accountNumber.slice(-4)}</span>
+                  </div>
+                  <div className="mp-receipt-row">
+                    <span>IFSC Code:</span>
+                    <span>{withdrawReceipt.ifscCode}</span>
+                  </div>
+                  <div className="mp-receipt-row">
+                    <span>Branch:</span>
+                    <span>{withdrawReceipt.branchName}</span>
+                  </div>
+                  <div className="mp-receipt-row">
+                    <span>Status:</span>
+                    <span className="mp-status-pill pending">⏳ Pending Admin Approval</span>
+                  </div>
+                </div>
+
+                <div className="mp-receipt-notice">
+                  <p>
+                    Admin panel me withdrawal approval ke baad <strong>₹{withdrawReceipt.finalAmount.toFixed(2)}</strong> direct aapke account me credit ho jayenge.
+                  </p>
+                </div>
+
+                <div className="mp-form-actions" style={{ marginTop: '16px', width: '100%', justifyContent: 'space-between' }}>
+                  <button
+                    type="button"
+                    className="mp-btn-cancel"
+                    onClick={() => setActiveModal(null)}
+                  >
+                    Close
+                  </button>
+                  <button
+                    type="button"
+                    className="mp-gold-btn"
+                    onClick={() => setActiveModal('history')}
+                  >
+                    View in History
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1052,6 +1242,21 @@ export function ProfileDashboard({
                         )}
                       </div>
                     ))}
+                  </div>
+                </div>
+
+                <div className="mp-form-group">
+                  <label>User Name</label>
+                  <div className="mp-input-wrap">
+                    <User size={15} />
+                    <input
+                      type="text"
+                      value={editUsername}
+                      onChange={e => setEditUsername(e.target.value)}
+                      placeholder="e.g. LuckyWinner"
+                      minLength={3}
+                      maxLength={30}
+                    />
                   </div>
                 </div>
 

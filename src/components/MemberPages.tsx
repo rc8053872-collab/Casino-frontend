@@ -5,6 +5,7 @@ import { getBalance, getTransactions, submitWithdrawal, getPaymentSettings, Tran
 
 interface Member {
   id: string;
+  username?: string | null;
   phone: string | null;
   email?: string | null;
   balance: number;

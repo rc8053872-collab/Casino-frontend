@@ -17,7 +17,7 @@ declare global {
 
 const Marquee = 'marquee' as any;
 
-type Account = { id: string; email: string | null; phone: string | null; balance: number; role?: string };
+type Account = { id: string; username?: string | null; email: string | null; phone: string | null; balance: number; role?: string };
 
 
 
@@ -82,7 +82,7 @@ function DepositModal({ onClose, user }: { onClose: () => void, user: any }) {
 
   const submitDeposit = async () => {
     if (!user) { setMessage('Please login first'); return; }
-    if (Number(amount) < 200) { setMessage('Minimum deposit is ₹200'); return; }
+    if (Number(amount) < 100) { setMessage('Minimum deposit is ₹100'); return; }
     if (!utr) { setMessage('UTR number is required'); return; }
     
     setLoading(true);
@@ -114,7 +114,7 @@ function DepositModal({ onClose, user }: { onClose: () => void, user: any }) {
          <div style={{ textAlign: 'center', marginBottom: '20px', background: 'rgba(255,255,255,0.05)', padding: '15px', borderRadius: '12px', border: '1px solid rgba(143, 157, 215, 0.17)' }}>
            {setting.qrCodeUrl && <img src={setting.qrCodeUrl} alt="QR Code" style={{ width: '140px', height: '140px', borderRadius: '8px', margin: '0 auto 10px', background: '#fff', padding: '10px' }} />}
            <p style={{ margin: 0, fontSize: '15px', color: '#ccd6f6' }}>UPI ID: <b style={{ color: '#f4c35a', letterSpacing: '0.5px' }}>{setting.upiId}</b></p>
-           <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#8898c6' }}>Scan QR or copy UPI ID to pay. Minimum <strong style={{ color: '#fff' }}>₹200</strong>.</p>
+           <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#8898c6' }}>Scan QR or copy UPI ID to pay. Minimum <strong style={{ color: '#fff' }}>₹100</strong>.</p>
          </div>
       ) : <p style={{ textAlign: 'center', color: '#8898c6' }}>Loading payment details...</p>}
       
@@ -270,6 +270,18 @@ function App() {
       document.removeEventListener('visibilitychange', refreshOnFocus);
     };
   }, [refreshWalletBalance, user?.id]);
+
+  // Automated 10-minute server API heartbeat ping (keeps server alive 24/7)
+  useEffect(() => {
+    const pingServer = () => {
+      const baseUrl = import.meta.env.VITE_API_URL || '';
+      fetch(`${baseUrl}/health`).catch(() => {});
+      fetch(`${baseUrl}/api/ping`).catch(() => {});
+    };
+    pingServer(); // Immediate ping on initial load
+    const pingInterval = window.setInterval(pingServer, 10 * 60 * 1000); // Every 10 minutes (600,000 ms)
+    return () => window.clearInterval(pingInterval);
+  }, []);
 
   // Debounce Search
   const [debouncedSearch, setDebouncedSearch] = useState(search);

@@ -6550,5 +6550,274 @@ button {
   }
 }
 
+/* User Name on Identity Card */
+.mp-identity-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 3px 0 2px;
+  flex-wrap: wrap;
+}
+
+.mp-user-name {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.mp-verified-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+
+.mp-phone-label {
+  color: #8b99bd;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Quick Amount Selection Chips */
+.mp-quick-amounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.mp-amount-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(143, 157, 215, 0.2);
+  color: #ccd6f6;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mp-amount-chip:hover {
+  background: rgba(244, 195, 90, 0.15);
+  border-color: rgba(244, 195, 90, 0.5);
+  color: #f4c35a;
+}
+
+.mp-amount-chip.active {
+  background: #f4c35a;
+  border-color: #f4c35a;
+  color: #0c1024;
+}
+
+.mp-amount-chip.max {
+  border-color: rgba(244, 195, 90, 0.4);
+  color: #f4c35a;
+}
+
+/* Live Fee & Net Payout Calculation Card */
+.mp-fee-breakdown-card {
+  margin-top: 10px;
+  background: linear-gradient(135deg, rgba(16, 20, 42, 0.95) 0%, rgba(10, 14, 30, 0.95) 100%);
+  border: 1px solid rgba(244, 195, 90, 0.28);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  animation: mpFadeIn 0.2s ease-in;
+}
+
+@keyframes mpFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mp-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #a3b1d6;
+  padding: 3px 0;
+}
+
+.mp-breakdown-row.fee {
+  color: #f59e0b;
+}
+
+.mp-breakdown-val.text-cut {
+  color: #f87171;
+  font-weight: 700;
+  font-family: monospace;
+  font-size: 13px;
+}
+
+.mp-breakdown-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 6px 0;
+}
+
+.mp-breakdown-row.total {
+  font-size: 13px;
+  color: #ffffff;
+}
+
+.mp-breakdown-val.text-payout {
+  color: #34d399;
+  font-weight: 900;
+  font-size: 16px;
+  font-family: monospace;
+}
+
+.mp-fee-note {
+  margin: 8px 0 0;
+  font-size: 10.5px;
+  color: #8b99bd;
+  line-height: 1.4;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+/* Withdrawal Success Confirmation Screen */
+.mp-success-receipt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 6px 2px;
+}
+
+.mp-success-badge-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.45);
+  margin-bottom: 12px;
+  animation: mpPulse 1.8s infinite;
+}
+
+@keyframes mpPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); box-shadow: 0 0 32px rgba(16, 185, 129, 0.6); }
+  100% { transform: scale(1); }
+}
+
+.mp-success-heading {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.mp-success-subheading {
+  margin: 0 0 16px;
+  font-size: 12px;
+  color: #a3b1d6;
+  max-width: 320px;
+  line-height: 1.4;
+}
+
+.mp-receipt-card {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(16, 20, 44, 0.95) 0%, rgba(9, 13, 30, 0.98) 100%);
+  border: 1px solid rgba(244, 195, 90, 0.35);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
+}
+
+.mp-receipt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #92a0c4;
+}
+
+.mp-receipt-row strong {
+  color: #ffffff;
+}
+
+.mp-receipt-row strong.text-white {
+  color: #ffffff;
+  font-size: 13px;
+  font-family: monospace;
+}
+
+.mp-receipt-row strong.text-warning {
+  color: #f87171;
+  font-family: monospace;
+}
+
+.mp-receipt-row.highlight {
+  font-size: 13px;
+  color: #ffd700;
+  padding: 3px 0;
+}
+
+.mp-receipt-row strong.text-success.font-xl {
+  color: #34d399;
+  font-size: 18px;
+  font-weight: 900;
+  font-family: monospace;
+}
+
+.mp-receipt-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 4px 0;
+}
+
+.mp-receipt-notice {
+  width: 100%;
+  margin-top: 12px;
+  background: rgba(244, 195, 90, 0.08);
+  border: 1px dashed rgba(244, 195, 90, 0.35);
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.mp-receipt-notice p {
+  margin: 0;
+  font-size: 11px;
+  color: #f5eedc;
+  line-height: 1.45;
+}
+
+.mp-receipt-notice strong {
+  color: #f4c35a;
+}
+
+.mp-status-pill.pending {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+
 
 
