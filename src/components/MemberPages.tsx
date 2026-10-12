@@ -181,165 +181,28 @@ export function SupportPage({ whatsappNumber, onHome }: HomeAction & { whatsappN
   </main>;
 }
 
-export function ProfilePage({ user, onHome, onLogin, onLogout, onDeposit, onBalanceUpdate }: PageActions & {
+import { ProfileDashboard } from './ProfileDashboard';
+
+export function ProfilePage({ user, onHome, onLogin, onLogout, onDeposit, onBalanceUpdate, onOpenVip, whatsappNumber }: PageActions & {
   user: Member | null;
   onLogout: () => void;
   onDeposit: () => void;
   onBalanceUpdate: (balance: number) => void;
+  onOpenVip?: () => void;
+  whatsappNumber?: string | null;
 }) {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
-  const [panel, setPanel] = useState<'profile' | 'withdraw' | 'history'>('profile');
-  const [hasMoreTransactions, setHasMoreTransactions] = useState(false);
-  const [loadingMoreTransactions, setLoadingMoreTransactions] = useState(false);
-  const [amount, setAmount] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
-  const [ifscCode, setIfscCode] = useState('');
-  const [branchName, setBranchName] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [feePercent, setFeePercent] = useState(0);
-
-  useEffect(() => {
-    if (panel === 'withdraw') {
-      getPaymentSettings().then(settings => setFeePercent(settings.withdrawFeePercent || 0)).catch(() => {});
-    }
-  }, [panel]);
-
-  useEffect(() => {
-    if (!user) return;
-    let active = true;
-    const refreshAccount = async () => {
-      try {
-        const [items, wallet] = await Promise.all([getTransactions(51, 0), getBalance()]);
-        if (!active) return;
-        const latest = items.slice(0, 50);
-        setTransactions(current => [
-          ...latest,
-          ...current.filter(item => !latest.some(latestItem => latestItem.id === item.id))
-        ]);
-        setHasMoreTransactions(items.length > 50);
-        onBalanceUpdate(wallet.balance);
-        setError('');
-      } catch (reason) {
-        if (active) setError(getMemberErrorMessage(reason));
-      }
-    };
-    void refreshAccount();
-    const interval = window.setInterval(() => { void refreshAccount(); }, 10000);
-    return () => { active = false; window.clearInterval(interval); };
-  }, [onBalanceUpdate, user]);
-
-  const loadMoreTransactions = async () => {
-    setLoadingMoreTransactions(true);
-    setError('');
-    try {
-      const items = await getTransactions(50, transactions.length);
-      setTransactions(current => {
-        const existingIds = new Set(current.map(item => item.id));
-        return [...current, ...items.filter(item => !existingIds.has(item.id))];
-      });
-      setHasMoreTransactions(items.length === 50);
-    } catch (reason) {
-      setError(getMemberErrorMessage(reason));
-    } finally {
-      setLoadingMoreTransactions(false);
-    }
-  };
-
-  const requestWithdrawal = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const parsedAmount = Number(amount);
-    if (!Number.isSafeInteger(parsedAmount) || parsedAmount < 300) {
-      setError('Enter a whole withdrawal amount of at least ₹300.');
-      return;
-    }
-
-    setSubmitting(true);
-    setError('');
-    setMessage('');
-    try {
-      const result = await submitWithdrawal(parsedAmount, {
-        accountNumber: accountNumber.trim(),
-        ifscCode: ifscCode.trim(),
-        branchName: branchName.trim()
-      });
-      setTransactions(current => [result.transaction, ...current.filter(item => item.id !== result.transaction.id)]);
-      const wallet = await getBalance();
-      onBalanceUpdate(wallet.balance);
-      setMessage(result.message);
-      setPanel('history');
-      setAmount('');
-      setAccountNumber('');
-      setIfscCode('');
-      setBranchName('');
-    } catch (reason) {
-      setError(getMemberErrorMessage(reason));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return <main className="member-page">
-    <PageHeader icon={<WalletCards size={19} />} eyebrow="ACCOUNT" title="My profile" onHome={onHome} />
-    {!user ? <section className="member-panel invite-login"><p>Log in to view your account, wallet, and transaction history.</p><button className="gold-button" onClick={onLogin}>Log in</button></section> : <>
-      <section className="profile-summary">
-        <div className="profile-avatar">{(user.phone || user.email || 'U').slice(-2).toUpperCase()}</div>
-        <div><small>PLAYER ACCOUNT</small><h2>{user.phone ? maskPhone(user.phone) : user.email || 'Google account'}</h2><p>{user.email || 'Email unavailable'} · Member ID · {user.id.slice(-8).toUpperCase()}</p></div>
-      </section>
-      <section className="profile-balance-card">
-        <div><small>AVAILABLE WALLET BALANCE</small><b>₹{Number(user.balance).toFixed(2)}</b></div>
-        <div className="profile-wallet-actions">
-          <button className="gold-button" onClick={onDeposit}>Deposit</button>
-          <button className="member-outline-button" onClick={() => { setError(''); setPanel('withdraw'); }}><ArrowDownToLine size={15} /> Withdraw</button>
-          <button className="member-outline-button" onClick={() => { setError(''); setPanel('history'); }}><History size={15} /> History</button>
-        </div>
-      </section>
-      {message && <p role="status" className="member-notice">{message}</p>}
-      {panel === 'withdraw' && <section className="member-panel profile-withdrawal">
-        <h3><Landmark size={17} /> Withdraw to bank</h3>
-        <p>Minimum withdrawal is ₹300. The requested amount is held while the administrator reviews it.</p>
-        <form onSubmit={event => void requestWithdrawal(event)}>
-          <label>Amount (₹)<input required type="number" min="300" step="1" inputMode="numeric" value={amount} onChange={event => setAmount(event.target.value)} placeholder="Minimum ₹300" /></label>
-          {feePercent > 0 && amount && Number(amount) >= 300 && (
-            <p className="fee-notice text-xs text-slate-500 mb-4" style={{ marginTop: '-10px', display: 'block' }}>
-              Platform fee ({feePercent}%): ₹{((Number(amount) * feePercent) / 100).toFixed(2)} <br/>
-              You will receive: <b>₹{(Number(amount) - (Number(amount) * feePercent) / 100).toFixed(2)}</b>
-            </p>
-          )}
-          <label>Bank account number<input required type="text" inputMode="numeric" autoComplete="off" maxLength={24} value={accountNumber} onChange={event => setAccountNumber(event.target.value.replace(/\D/g, ''))} placeholder="Enter account number" /></label>
-          <label>IFSC code<input required type="text" autoComplete="off" maxLength={11} value={ifscCode} onChange={event => setIfscCode(event.target.value.toUpperCase())} placeholder="e.g. HDFC0001234" /></label>
-          <label>Branch name<input required type="text" autoComplete="organization" maxLength={100} value={branchName} onChange={event => setBranchName(event.target.value)} placeholder="Enter bank branch" /></label>
-          {error && <p role="alert" className="member-error">{error}</p>}
-          <div className="withdrawal-form-actions">
-            <button type="button" className="member-outline-button" onClick={() => setPanel('profile')}>Cancel</button>
-            <button type="submit" className="gold-button" disabled={submitting}>{submitting ? 'Submitting…' : 'Submit withdrawal'}</button>
-          </div>
-        </form>
-      </section>}
-      {panel === 'history' && <section className="member-panel profile-history">
-        <h3>Deposit & withdrawal history</h3>
-        {error && <p role="alert" className="member-error">{error}</p>}
-        {!error && transactions.filter(transaction => transaction.type === 'DEPOSIT' || transaction.type === 'WITHDRAWAL').length === 0 && <p>No deposit or withdrawal activity yet.</p>}
-        {transactions.filter(transaction => transaction.type === 'DEPOSIT' || transaction.type === 'WITHDRAWAL').map(transaction => {
-          const isWithdrawal = transaction.type === 'WITHDRAWAL';
-          const status = transaction.status === 'COMPLETED' ? (isWithdrawal ? 'Paid' : 'Approved')
-            : transaction.status === 'PENDING' ? 'Pending'
-              : 'Rejected';
-          return <div className="deposit-history-row" key={transaction.id}>
-            <span><b>{isWithdrawal ? 'Withdrawal' : 'Deposit'}</b><small>{transaction.referenceId ? `Ref ${transaction.referenceId} · ` : ''}{transaction.description || new Date(transaction.createdAt).toLocaleString()}</small></span>
-            <strong className={`deposit-status status-${transaction.status.toLowerCase()}`}>
-              {isWithdrawal ? (transaction.status === 'FAILED' ? '' : '−') : transaction.status === 'COMPLETED' ? '+' : ''}₹{Number(transaction.amount).toFixed(2)} · {status}
-            </strong>
-          </div>;
-        })}
-        {hasMoreTransactions && <button type="button" className="member-outline-button" disabled={loadingMoreTransactions} onClick={() => void loadMoreTransactions()}>
-          {loadingMoreTransactions ? 'Loading…' : 'Load more history'}
-        </button>}
-      </section>}
-      <button className="member-outline-button profile-logout" onClick={onLogout}>Log out</button>
-    </>}
-  </main>;
+  return (
+    <ProfileDashboard
+      user={user}
+      onHome={onHome}
+      onLogin={onLogin}
+      onLogout={onLogout}
+      onDeposit={onDeposit}
+      onBalanceUpdate={onBalanceUpdate}
+      onOpenVip={onOpenVip}
+      whatsappNumber={whatsappNumber}
+    />
+  );
 }
 
 function PageHeader({ icon, eyebrow, title, onHome }: HomeAction & { icon: ReactNode; eyebrow: string; title: string }) {

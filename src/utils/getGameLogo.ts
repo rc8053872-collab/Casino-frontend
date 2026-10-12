@@ -12,6 +12,15 @@ export function getGameLogo(game: any): string {
   if (game.slug === 'dragon-tiger-joker') {
     return `/game-art/${encodeURIComponent(game.slug)}.webp?v=4`;
   }
+  if (game.slug === '3-cards-judgement-mac88' || /3\s*cards?\s*judgement/i.test(normalizedName)) {
+    return `/game-art/3-cards-judgement-mac88.webp?v=4`;
+  }
+  if (game.slug === 'arena-of-cards' || /arena\s*of\s*cards/i.test(normalizedName)) {
+    return `/game-art/arena-of-cards.webp?v=4`;
+  }
+  if (/baccarat/i.test(normalizedName)) {
+    return `/game-art/baccarat-askmeslot.webp?v=4`;
+  }
   if (normalizedName === 'aviator') {
     return `/icons/aviator.jpg?v=4`;
   }
@@ -39,8 +48,11 @@ export function getGameLogo(game: any): string {
     if (/mine|plinko|tower/.test(name)) {
       return artworkFor(['icons/games/diamond-treasure.webp', 'icons/games/3-arcane-cauldrons.webp', 'icons/games/3-big-barrels-aztec.webp']);
     }
-    if (/roulette|black jack|pokdeng|sic bo|hilo|dice|mahjong|baccarat|teen patti|acey deucey|5pk/.test(name)) {
-      return artworkFor(['icons/games/handicap-baccarat.webp', 'icons/roulette_main.jpg', 'icons/games/lil-greedy.webp']);
+    if (/roulette/.test(name)) {
+      return `/icons/roulette_main.jpg${cb}`;
+    }
+    if (/black jack|pokdeng|sic bo|hilo|dice|mahjong|baccarat|teen patti|acey deucey|5pk/.test(name)) {
+      return artworkFor(['game-art/baccarat-askmeslot.webp', 'icons/games/handicap-baccarat.webp', 'game-art/arena-of-cards.webp']);
     }
     if (/crash|heli/.test(name)) {
       return artworkFor(['icons/games/3-arcane-cauldrons.webp', 'icons/games/3-big-barrels-aztec.webp', 'icons/games/3-power-dragons.webp']);

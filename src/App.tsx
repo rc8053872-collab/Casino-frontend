@@ -392,15 +392,15 @@ function App() {
     const category = game.category.trim().toLowerCase();
     const name = game.name.trim().toLowerCase();
     const subCategory = game.subCategory?.trim().toLowerCase();
-    if (subCategory === 'aviator' || subCategory === 'other') return subCategory;
+    if (subCategory === 'aviator' || subCategory === 'other' || subCategory === 'cards') return subCategory;
     if (name === 'aviator extra bet') return 'minigames';
     if (name.includes('aviator')) return 'aviator';
     if (/dragon[\s-]*tiger/i.test(name)) return 'dragon-tiger';
     if (name.includes('fish') || category.includes('fish')) return 'fishing';
+    if (category.includes('card') || category === 'cards' || category === 'roulette' || /cards?|judgement|arena of cards|poker|baccarat|teen.?patti|pokdeng/i.test(name)) return 'cards';
     if (['slot', 'slots'].includes(category)) return 'slots';
     if (category.includes('lottery')) return 'lottery';
     if (category.includes('live') || category === 'casino') return 'live';
-    if (category.includes('card') || category === 'roulette' || /baccarat|poker|teen.?patti/i.test(name)) return 'cards';
     if (['mini', 'arcade', 'crash', 'hundred-player'].includes(category)) return 'minigames';
     if (category.includes('sport')) return 'sports';
     if (category.includes('cockfight') || category.includes('cock-fight')) return 'cockfight';
@@ -777,7 +777,7 @@ function App() {
           : view === 'vip'
             ? <VipPage user={user} onHome={() => setView('home')} onLogin={() => setModal('login')} />
             : view === 'profile'
-              ? <ProfilePage user={user} onHome={() => setView('home')} onLogin={() => setModal('login')} onLogout={handleLogout} onDeposit={openDeposit} onBalanceUpdate={updateWalletBalance} />
+              ? <ProfilePage user={user} onHome={() => setView('home')} onLogin={() => setModal('login')} onLogout={handleLogout} onDeposit={openDeposit} onBalanceUpdate={updateWalletBalance} onOpenVip={() => setView('vip')} whatsappNumber={supportWhatsApp} />
               : view === 'fairplay'
                 ? <FairPlayPage onHome={() => setView('home')} />
                 : view === 'support'
