@@ -23,12 +23,13 @@ type Account = { id: string; email: string | null; phone: string | null; balance
 
 
 const winners = [
-  { user: '9***56', game: 'Aviator', amount: '53x', image: '/icons/aviator.jpg' },
-  { user: '9***17', game: 'Dragon Tiger', amount: '74x', image: '/icons/dragon.jpg' },
-  { user: '2***51', game: 'Super Slot', amount: '155x', image: '/icons/slot.jpg' },
-  { user: '8***92', game: 'Roulette', amount: '50x', image: '/icons/roulette.jpg' },
-  { user: '4***71', game: 'Crash', amount: '53x', image: '/icons/aviator.jpg' },
-  { user: '7***24', game: 'Baccarat', amount: '100x', image: '/icons/dragon.jpg' },
+  { user: 'Player7***2', game: 'Golden Fortune', amount: '₹12,560', image: '/category/cat-slots.jpg' },
+  { user: 'User8***9', game: 'Dragon Treasure', amount: '₹8,400', image: '/category/cat-minigames.jpg' },
+  { user: 'King***1', game: '25 Coins Deluxe', amount: '₹25,000', image: '/icons/25-coins-santas-jackpot.webp' },
+  { user: 'Lucky***8', game: 'Jungle Riches', amount: '₹18,900', image: '/icons/3-african-drums.webp' },
+  { user: 'Pro***4', game: 'Candy Rush', amount: '₹31,200', image: '/icons/candy-superwin.webp' },
+  { user: 'Star***5', game: 'Sun of Egypt', amount: '₹14,500', image: '/icons/slot.jpg' },
+  { user: 'Aviator***9', game: 'Aviator', amount: '₹53,000', image: '/category/cat-aviator.jpg' },
 ]
 
 type PromoTab = 'Event' | 'Mission' | 'VIP' | 'Rebate' | 'Unclaimed'
@@ -168,6 +169,15 @@ function App() {
   const [authLoading, setAuthLoading] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [supportWhatsApp, setSupportWhatsApp] = useState<string | null>(null);
+  const [promoDismissed, setPromoDismissed] = useState(false);
+  const [heroSlide, setHeroSlide] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHeroSlide((prev) => (prev + 1) % 4);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, []);
   
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -390,21 +400,20 @@ function App() {
     categoryId === 'hot' ? game.isHot : getHomeGameCategory(game) === categoryId
   );
   const homeCategoryOptions = [
-    { id: 'slots', label: 'Slots', image: '/icons/slot_main.jpg' },
-    { id: 'minigames', label: 'Mini Games', image: '/icons/3-power-dragons.webp' },
+    { id: 'slots', label: 'Slots', image: '/category/cat-slots.jpg' },
+    { id: 'minigames', label: 'Mini Games', image: '/category/cat-minigames.jpg' },
+    { id: 'aviator', label: 'Aviator', image: '/category/cat-aviator.jpg' },
+    { id: 'cards', label: 'Cards', image: '/category/cat-cards.jpg' },
     { id: 'live', label: 'Live Games', image: '/icons/handicap-baccarat.webp' },
     { id: 'lottery', label: 'Lottery', image: '/icons/25-coins-santas-jackpot.webp' },
-    { id: 'aviator', label: 'Aviator', image: '/icons/aviator_main.jpg' },
-    { id: 'cards', label: 'Cards', image: '/icons/roulette_main.jpg' },
-    { id: 'dragon-tiger', label: 'Dragon Tiger', image: '/icons/dragon_main.jpg' },
-    { id: 'sports', label: 'Sports', image: '/icons/aviator.jpg' },
     { id: 'fishing', label: 'Fish', image: '/icons/fishing-cover.webp' },
-    { id: 'cockfight', label: 'Cockfight', image: '/icons/dragon.jpg' },
+    { id: 'sports', label: 'Sports', image: '/icons/aviator.jpg' },
     { id: 'other', label: 'More Games', image: '/icons/diamond-treasure.webp' },
   ].filter(option =>
     getHomeCategoryGames(option.id).length > 0
     || option.id === 'dragon-tiger'
     || (option.id === 'fishing' && games.some(game => getHomeGameCategory(game) === option.id))
+    || ['slots', 'minigames', 'aviator', 'cards'].includes(option.id)
   );
   const providerGames = filteredGames
     .filter(game => game.provider === activeProvider)
@@ -437,16 +446,21 @@ function App() {
   const renderGameCard = (game: Game) => {
     const isSupported = !game.supportedCurrencies || game.supportedCurrencies.includes('INR');
     const isSuspended = isSuspendedGame(game);
-    const isArcade = game.category.toUpperCase() === 'ARCADE';
     const logoSrc = getGameLogo(game);
-    
+    const isFav = favorites.includes(game.id);
+
     return (
-      <article className={`game-card home-catalog-card${isArcade ? ' mini-game-card' : ''}`} key={game.id} onClick={() => isSupported && !isSuspended ? launch(game) : undefined} style={{ background: 'transparent', padding: 0, border: 'none', opacity: isSupported && !isSuspended ? 1 : 0.55, cursor: isSuspended ? 'not-allowed' : 'pointer' }}>
-        <div className="game-image" style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', aspectRatio: '1/1', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 15px rgba(0,0,0,0.4)' }}>
+      <article
+        className={`malt-game-card ${isSuspended ? 'disabled' : ''}`}
+        key={game.id}
+        onClick={() => isSupported && !isSuspended ? launch(game) : undefined}
+        style={{ opacity: isSupported && !isSuspended ? 1 : 0.55, cursor: isSuspended ? 'not-allowed' : 'pointer' }}
+      >
+        <div className="malt-card-thumb-wrap">
           <img 
             src={logoSrc} 
             alt={game.name} 
-            style={{ width: '100%', height: '100%', objectFit: 'cover', color: 'transparent' }}
+            loading="lazy"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               if (target.src.includes('slot-new.png')) return;
@@ -454,13 +468,13 @@ function App() {
             }} 
           />
           {(isSuspended || !isSupported) && (
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: '#e74b62', color: '#fff', fontSize: '9px', fontWeight: 'bold', textAlign: 'center', padding: '4px', textTransform: 'uppercase' }}>
-              {isSuspended ? 'Suspended' : 'Unsupported'}
+            <div className="malt-card-badge">
+              {isSuspended ? 'COMING SOON' : 'UNSUPPORTED'}
             </div>
           )}
-          {(game.isHot || game.isNew) && <span style={{ position: 'absolute', top: '6px', left: '6px', background: '#fff', color: '#000', fontSize: '10px', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', boxShadow: '0 2px 5px rgba(0,0,0,0.5)' }}>👍</span>}
           <button
             type="button"
+            className={`malt-card-star ${isFav ? 'active' : ''}`}
             onClick={(event) => {
               event.stopPropagation();
               if (!user) {
@@ -470,13 +484,12 @@ function App() {
               }
               toggleFavorite(game.id);
             }}
-            aria-label={`${favorites.includes(game.id) ? 'Remove' : 'Add'} ${game.name} ${favorites.includes(game.id) ? 'from' : 'to'} favorites`}
-            style={{ position: 'absolute', top: '6px', right: '6px', width: '26px', height: '26px', display: 'grid', placeItems: 'center', borderRadius: '50%', background: 'rgba(5,8,26,.75)', color: favorites.includes(game.id) ? '#f4c35a' : '#fff' }}
+            aria-label={`${isFav ? 'Remove' : 'Add'} ${game.name} from favorites`}
           >
-            <Star size={15} fill={favorites.includes(game.id) ? 'currentColor' : 'none'} />
+            <Star size={13} fill={isFav ? '#f4c35a' : 'none'} color={isFav ? '#f4c35a' : '#fff'} />
           </button>
         </div>
-        <div className="game-name" style={{ textAlign: 'center', marginTop: '6px', color: '#ccd6f6', fontSize: '11px', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div className="malt-card-title" title={game.name}>
           {game.name}
         </div>
       </article>
@@ -611,72 +624,124 @@ function App() {
   }
 
   return (
-    <div className="viewport">
-      <div className="app-shell">
-        {!activeProvider && (
-          <div className="promo-strip" style={{ background: '#092562', color: '#f4c35a', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 15px' }}>
-            <button className="icon-button" style={{ color: '#8898c6' }}><X size={16} /></button>
-            <span style={{ fontSize: '13px', fontWeight: '700', letterSpacing: '0.5px' }}>
-              <span style={{ fontSize: '16px', marginRight: '5px', verticalAlign: '-2px' }}>📲</span> 
-              Download App Bonus ₹37
-            </span>
-            <button style={{ background: '#f4c35a', color: '#16142b', padding: '4px 10px', borderRadius: '4px', fontWeight: 'bold', fontSize: '11px' }}>Download now</button>
+    <div className="malt-viewport">
+      <div className="malt-shell">
+        {!activeProvider && !promoDismissed && (
+          <div className="malt-promo-bar">
+            <div className="malt-promo-left">
+              <span className="malt-promo-gift">🎁</span>
+              <span className="malt-promo-title">Download App Bonus</span>
+              <span className="malt-promo-desc">Get exclusive rewards on our app!</span>
+            </div>
+            <div className="malt-promo-actions">
+              <button
+                className="malt-promo-dl-btn"
+                onClick={() => alert('Download app starting...')}
+              >
+                Download now
+              </button>
+              <button
+                className="malt-promo-close"
+                onClick={() => setPromoDismissed(true)}
+                aria-label="Dismiss banner"
+              >
+                <X size={15} />
+              </button>
+            </div>
           </div>
         )}
-        <header className="header" style={activeProvider ? { top: 0 } : {}}>
+
+        <header className={`malt-header ${!activeProvider && !promoDismissed ? 'has-promo' : ''}`}>
           {activeProvider ? (
             <div style={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <button onClick={() => setActiveProvider(null)} style={{ background: 'transparent', border: 'none', color: '#fff', padding: 0, display: 'flex', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <button
+                  onClick={() => setActiveProvider(null)}
+                  style={{ background: 'transparent', border: 'none', color: '#fff', padding: 0, display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+                  aria-label="Back to Lobby"
+                >
                   <ChevronRight style={{ transform: 'rotate(180deg)' }} />
                 </button>
-                <div className="brand" style={{ gap: '0' }}>
-                  <div style={{ width: '40px', height: '40px', overflow: 'hidden', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <img src="/logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                <div className="malt-brand-group" onClick={() => { setActiveProvider(null); setView('home'); }}>
+                  <div className="malt-brand-logo-box">
+                    <img src="/logo.png" alt="Logo" />
                   </div>
-                  <span style={{ marginLeft: '10px' }}>MALTI<span className="brand-accent">PLAYX</span></span>
+                  <span className="malt-brand-name">MALTIPLAYX</span>
                 </div>
               </div>
-              <button onClick={() => setShowCategoryDropdown(!showCategoryDropdown)} style={{ background: 'transparent', border: 'none', color: '#fff', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '15px', fontWeight: 'bold' }}>
+              <button
+                onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                style={{ background: 'transparent', border: 'none', color: '#fff', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer' }}
+              >
                 {categories.find(c => c.id === activeCategory)?.label || 'Slot'} <ChevronRight size={14} style={{ transform: showCategoryDropdown ? 'rotate(-90deg)' : 'rotate(90deg)', transition: 'transform 0.2s' }} />
               </button>
             </div>
           ) : (
             <>
-              <div className="brand">
-                <div style={{ width: '40px', height: '40px', overflow: 'hidden', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  <img src="/logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              <div className="malt-brand-group" onClick={() => setView('home')}>
+                <div className="malt-brand-logo-box">
+                  <img src="/logo.png" alt="Maltiplayx Logo" />
                 </div>
-                <span style={{ marginLeft: '10px' }}>MALTI<span className="brand-accent">PLAYX</span></span>
+                <span className="malt-brand-name">MALTIPLAYX</span>
               </div>
-              <div className="header-actions">
-                <button className="icon-button"><Bell size={19} /></button>
-                <button className="icon-button" onClick={() => document.getElementById('game-search')?.focus()}><Search size={20} /></button>
-                {user ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ background: 'rgba(255,255,255,0.1)', padding: '5px 10px', borderRadius: '20px', fontSize: '14px' }}>
-                      <WalletCards size={14} style={{ display: 'inline', marginRight: '5px', verticalAlign: '-2px' }} />
-                      {user.balance.toFixed(2)}
-                    </div>
-                    <button type="button" aria-label="Open profile" onClick={() => setView('profile')} style={{ width: '30px', height: '30px', padding: 0, borderRadius: '50%', overflow: 'hidden', border: '1px solid #f4c35a', background: 'transparent', cursor: 'pointer' }}>
-                      <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id || 'User'}&backgroundColor=f4c35a`} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', color: 'transparent' }} />
-                    </button>
-                    <button className="outline-action" onClick={handleLogout}>Logout</button>
-                  </div>
-                ) : (
-                  <button className="login-button" onClick={() => setModal('login')}>Log in</button>
-                )}
+
+              <div className="malt-header-right">
+                <button
+                  className="malt-icon-btn"
+                  onClick={() => alert('No new notifications')}
+                  aria-label="Notifications"
+                >
+                  <Bell size={19} />
+                  <span className="malt-notif-dot" />
+                </button>
+
+                <button
+                  className="malt-icon-btn"
+                  onClick={() => {
+                    const input = document.getElementById('game-search');
+                    if (input) {
+                      input.focus();
+                      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                  }}
+                  aria-label="Search"
+                >
+                  <Search size={19} />
+                </button>
+
+                <div
+                  className="malt-wallet-pill"
+                  onClick={openDeposit}
+                  title="Click to deposit funds"
+                >
+                  <WalletCards size={14} color="#8e9bc7" />
+                  <span className="malt-wallet-amount">
+                    ₹{user ? Number(user.balance).toLocaleString('en-IN') : '1,000'}
+                  </span>
+                  <span className="malt-wallet-plus">+</span>
+                </div>
+
+                <div
+                  className="malt-avatar-box"
+                  onClick={() => user ? setView('profile') : setModal('login')}
+                  title={user ? 'Open Profile' : 'Click to Log in'}
+                >
+                  <img
+                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'MaltiQueen'}&backgroundColor=f4c35a`}
+                    alt="Avatar"
+                  />
+                </div>
               </div>
             </>
           )}
 
           {showCategoryDropdown && activeProvider && (
-            <div style={{ position: 'absolute', top: '76px', left: 0, right: 0, background: '#0a0f2c', zIndex: 10, padding: '20px 15px', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px', borderBottom: '1px solid rgba(143, 157, 215, 0.2)', boxShadow: '0 15px 30px rgba(0,0,0,0.6)' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+            <div style={{ position: 'absolute', top: '58px', left: 0, right: 0, background: '#0a0f2c', zIndex: 10, padding: '16px 12px', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px', borderBottom: '1px solid rgba(143, 157, 215, 0.2)', boxShadow: '0 15px 30px rgba(0,0,0,0.6)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
                 {[...categories, { id: 'recent', label: 'Recent', icon: <span style={{fontSize:'14px'}}>🕒</span> }, { id: 'favorites', label: 'Favorite', icon: <span style={{fontSize:'14px', color: '#f4c35a'}}>⭐</span> }].map(cat => {
                   const isActive = activeCategory === cat.id;
                   return (
-                    <button 
+                    <button
                       key={cat.id}
                       onClick={() => {
                         setActiveCategory(cat.id);
@@ -701,7 +766,7 @@ function App() {
             </div>
           )}
         </header>
-        
+
         {view === 'promos'
           ? <InvitePromoPage user={user} onHome={() => setView('home')} onLogin={() => setModal('login')} onOpenDeposit={openDeposit} />
           : view === 'vip'
@@ -712,182 +777,337 @@ function App() {
                 ? <FairPlayPage onHome={() => setView('home')} />
                 : view === 'support'
                   ? <SupportPage whatsappNumber={supportWhatsApp} onHome={() => setView('home')} />
-                  : <main className="main-content" style={activeProvider ? { paddingTop: '10px' } : undefined}>
+                  : <main style={{ paddingBottom: '90px' }}>
           {!activeProvider && (
             <>
-              <section className="banner-slider" style={{ position: 'relative', overflow: 'hidden', borderRadius: '14px', marginBottom: '20px', aspectRatio: '21/9' }}>
-                <div ref={sliderRef} style={{ display: 'flex', width: '100%', height: '100%', overflowX: 'auto', scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}>
-                  {[1, 2, 3].map((item) => (
-                    <div key={item} style={{ flex: '0 0 100%', height: '100%', scrollSnapAlign: 'start', backgroundImage: `url(https://picsum.photos/seed/banner${item}/800/400)`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                      <div style={{ padding: '20px', background: 'linear-gradient(90deg, rgba(0,0,0,0.8), transparent)', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                        <h2 style={{ color: '#f4c35a', margin: '0 0 5px', fontSize: '24px', fontStyle: 'italic', fontWeight: '900' }}>VIP Union</h2>
-                        <p style={{ margin: 0, fontSize: '14px', fontWeight: 'bold' }}>Your <span style={{ color: '#f4c35a' }}>777777rs</span> Bonus</p>
-                      </div>
+              {/* 3. Hero Promotional Banner */}
+              <section className="malt-hero-section">
+                <div
+                  className="malt-hero-card"
+                  style={{ backgroundImage: `url(/welcome-banner.jpg)` }}
+                >
+                  <div className="malt-hero-overlay">
+                    <div className="malt-hero-title-group">
+                      <div className="malt-hero-title-top">WELCOME</div>
+                      <div className="malt-hero-title-bottom">BONUS</div>
                     </div>
-                  ))}
-                </div>
-                <div style={{ position: 'absolute', bottom: '10px', left: '0', right: '0', display: 'flex', justifyContent: 'center', gap: '5px' }}>
-                  {[0,1,2].map(i => <div key={i} style={{ width: '8px', height: '8px', borderRadius: '50%', background: i===bannerIndex ? '#fff' : 'rgba(255,255,255,0.4)', transition: 'background 0.3s' }} />)}
+                    <p className="malt-hero-subtitle">Your next big win starts here!</p>
+                    <button
+                      className="malt-hero-cta-btn"
+                      onClick={() => {
+                        if (games.length > 0) launch(games[0]);
+                        else openDeposit();
+                      }}
+                    >
+                      PLAY NOW ➔
+                    </button>
+                  </div>
+                  <div className="malt-hero-dots">
+                    {[0, 1, 2, 3].map((i) => (
+                      <span
+                        key={i}
+                        className={`malt-hero-dot ${heroSlide === i ? 'active' : ''}`}
+                        onClick={() => setHeroSlide(i)}
+                      />
+                    ))}
+                  </div>
                 </div>
               </section>
 
-              <div style={{ display: 'flex', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(143, 157, 215, 0.17)' }}>
-                <Volume2 size={18} color="#6670a1" style={{ flexShrink: 0, marginRight: '10px' }} />
-                <Marquee style={{ color: '#f4c35a', fontSize: '12px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
-                  Welcome to MaltiplayX, a hall of fortune and a cradle of huge prizes! 🎰🔥 Here, not only are the winning rates incredibly high, but every spin could bring a surprise! Convenient deposits and lightning-fast, secure, and stable withdrawals ensure worry-free gaming. 💎 Join MaltiplayX now and start your journey to wealth. The next big prize winner could be you! 📣
-                </Marquee>
-                <Mail size={18} color="#6670a1" style={{ flexShrink: 0, marginLeft: '10px' }} />
-              </div>
-
-              <section className="section-block grand-prize-section" style={{ marginTop: '10px' }}>
-                <div style={{ textAlign: 'center', marginBottom: '15px' }}>
-                  <span style={{ color: '#6670a1', fontSize: '14px' }}>✦ ✦ <strong style={{ color: '#fff', fontSize: '16px', margin: '0 10px', letterSpacing: '0.5px' }}>Grand Prize Record</strong> ✦ ✦</span>
-                </div>
-                <Marquee scrollamount="4">
-                  <div style={{ display: 'grid', gridTemplateRows: 'auto auto', gridAutoFlow: 'column', gap: '10px', paddingBottom: '5px' }}>
-                    {[...winners, ...winners].map((winner, idx) => (
-                      <div key={idx} style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(143, 157, 215, 0.2)', padding: '6px 12px', borderRadius: '8px', minWidth: '180px' }}>
-                        <img src={winner.image} style={{ width: '40px', height: '40px', borderRadius: '6px', marginRight: '10px' }} />
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontSize: '12px', color: '#fff' }}><span style={{ color: '#00d13b' }}>Congrats </span>{winner.user}</span>
-                          <span style={{ fontSize: '13px', color: '#fff', marginTop: '2px', fontWeight: 'bold' }}>win <span style={{ color: '#f4c35a' }}>{winner.amount}</span></span>
+              {/* 4. Live Wins Section */}
+              <section className="malt-live-section">
+                <div className="malt-live-container">
+                  <div className="malt-live-tag">
+                    <span>🔥</span>
+                    <span>Live Wins</span>
+                  </div>
+                  <div className="malt-live-ticker">
+                    {winners.map((winner, idx) => (
+                      <div key={idx} className="malt-live-card">
+                        <img
+                          src={winner.image}
+                          alt={winner.game}
+                          className="malt-live-thumb"
+                          onError={(e) => { (e.target as HTMLImageElement).src = '/category/slot-new.png'; }}
+                        />
+                        <div className="malt-live-info">
+                          <span className="malt-live-user">{winner.user}</span>
+                          <span className="malt-live-win">
+                            won <strong>{winner.amount}</strong>
+                          </span>
                         </div>
                       </div>
                     ))}
                   </div>
-                </Marquee>
+                </div>
               </section>
 
-              <section className="quick-actions"><button onClick={() => setView('promos')}><span className="quick-icon gold"><Gift size={19} /></span><span>Promos</span></button><button onClick={() => setView('vip')}><span className="quick-icon blue"><Trophy size={19} /></span><span>VIP club</span></button><button onClick={openSupport}><span className="quick-icon pink"><Headphones size={19} /></span><span>Support</span></button><button onClick={() => setView('fairplay')}><span className="quick-icon green"><ShieldCheck size={19} /></span><span>Fair play</span></button></section>
-            </>
-          )}
-          <section className="section-block games-section" style={{ display: 'flex', gap: activeProvider ? '15px' : '0', alignItems: 'flex-start', margin: activeProvider ? '0' : '20px -15px 0', padding: '0 15px' }}>
-            {activeProvider && (
-              <div ref={sidebarRef} className="category-sidebar" style={{ display: 'flex', flexDirection: 'column', width: '100px', flexShrink: 0, gap: '8px', maxHeight: 'calc(100vh - 140px)', overflowY: 'auto', paddingRight: '5px', paddingBottom: '100px', position: 'sticky', top: '110px', zIndex: 5 }}>
-                {dynamicProviders.map(provider => (
+              {/* 5. Quick Access Cards */}
+              <section className="malt-quick-grid">
+                <button className="malt-quick-card" onClick={() => setView('promos')}>
+                  <div className="malt-quick-card-left">
+                    <span className="malt-quick-icon gold"><Gift size={16} /></span>
+                    <span className="label">Promos</span>
+                  </div>
+                  <ChevronRight size={13} className="malt-quick-chevron" />
+                </button>
+                <button className="malt-quick-card" onClick={() => setView('vip')}>
+                  <div className="malt-quick-card-left">
+                    <span className="malt-quick-icon purple"><Trophy size={16} /></span>
+                    <span className="label">VIP Club</span>
+                  </div>
+                  <ChevronRight size={13} className="malt-quick-chevron" />
+                </button>
+                <button className="malt-quick-card" onClick={openSupport}>
+                  <div className="malt-quick-card-left">
+                    <span className="malt-quick-icon blue"><Headphones size={16} /></span>
+                    <span className="label">Support</span>
+                  </div>
+                  <ChevronRight size={13} className="malt-quick-chevron" />
+                </button>
+                <button className="malt-quick-card" onClick={() => setView('fairplay')}>
+                  <div className="malt-quick-card-left">
+                    <span className="malt-quick-icon green"><ShieldCheck size={16} /></span>
+                    <span className="label">Fair Play</span>
+                  </div>
+                  <ChevronRight size={13} className="malt-quick-chevron" />
+                </button>
+              </section>
+
+              {/* 6. Game Search Bar */}
+              <div className="malt-search-box">
+                <Search size={18} color="#6977a4" />
+                <input
+                  id="game-search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search games..."
+                />
+                {search && (
+                  <button className="malt-clear-search" onClick={() => setSearch('')}>
+                    <X size={15} />
+                  </button>
+                )}
+              </div>
+
+              {/* 7. Category Navigation Cards */}
+              <div className="malt-categories-row" aria-label="Game categories">
+                {homeCategoryOptions.slice(0, 4).map(option => (
                   <button
-                    id={`provider-btn-${provider}`}
-                    key={provider}
+                    type="button"
+                    key={option.id}
+                    className={`malt-cat-card ${activeCategory === option.id ? 'active' : ''}`}
                     onClick={() => {
-                      setActiveProvider(provider);
-                      setProviderGameFilter('All');
-                      setProviderTab('All');
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                      setActiveCategory(option.id);
                     }}
-                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 8px', background: activeProvider === provider ? 'rgba(255,255,255,0.08)' : 'transparent', border: activeProvider === provider ? '1px solid rgba(244,195,90,0.5)' : '1px solid transparent', borderRadius: '8px', color: activeProvider === provider ? '#f4c35a' : '#ccd6f6', cursor: 'pointer', textAlign: 'left', fontSize: '11px', fontWeight: 'bold', transition: 'all 0.2s' }}
+                    aria-pressed={activeCategory === option.id}
                   >
-                    {renderProviderLogo(provider)}
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{provider}</span>
+                    <div className="malt-cat-img-box">
+                      <img
+                        src={option.image}
+                        alt={option.label}
+                        onError={(e) => { (e.target as HTMLImageElement).src = '/category/slot-new.png'; }}
+                      />
+                    </div>
+                    <span>{option.label}</span>
                   </button>
                 ))}
               </div>
-            )}
-            
-            <div className="game-content" style={{ flexGrow: 1, minWidth: 0 }}>
-              <div className="search-wrap" style={{ marginBottom: '15px' }}>
-                <Search size={17} />
-                <input id="game-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search games" />
-                {search && <button className="clear-search" onClick={() => setSearch('')}><X size={14} /></button>}
-              </div>
-              
-              {loading ? (
-                <div className="game-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>{[1, 2, 3, 4, 5, 6].map((item) => <div className="game-card skeleton" key={item} style={{ aspectRatio: '1/1', borderRadius: '12px' }} />)}</div>
-              ) : search ? (
-                filteredGames.length ? (
-                  <div className="game-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
-                    {filteredGames.map(renderGameCard)}
-                  </div>
-                ) : (
-                  <div className="empty-state" style={{ textAlign: 'center', padding: '30px 0', color: '#8898c6' }}><Search size={25} style={{ margin: '0 auto 10px' }} /><b>No games found</b></div>
-                )
-              ) : (
-                activeProvider ? (
-                  <div className="category-section" style={{ paddingTop: '10px' }}>
-                    <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', marginBottom: '20px', paddingBottom: '5px', scrollbarWidth: 'none' }}>
-                      {['All', 'Hot', 'Recent', 'Favorites'].map(f => (
-                         <button key={f} onClick={() => setProviderTab(f)} style={{ flex: '1 0 auto', padding: '8px 16px', background: f === providerTab ? '#fde3a7' : 'transparent', color: f === providerTab ? '#000' : '#8898c6', borderRadius: '8px', border: f === providerTab ? 'none' : '1px solid rgba(255,255,255,0.1)', fontSize: '12px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>{f}</button>
-                      ))}
-                    </div>
-                    <div className="provider-category-filters" aria-label="Filter provider games by type">
-                      {(['All', 'Slots', 'Aviator', 'Dragon Tiger', 'Triple 7', 'Suspended'] as const).map(filter => (
-                        <button
-                          key={filter}
-                          type="button"
-                          className={providerGameFilter === filter ? 'active' : ''}
-                          onClick={() => {
-                            setProviderGameFilter(filter);
-                            setProviderTab('All');
-                            setSearch('');
-                          }}
-                        >
-                          {filter}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="game-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                      {providerGames.length
-                        ? providerGames.map(renderGameCard)
-                        : <div className="empty-state" style={{ gridColumn: '1 / -1' }}><b>No games in this list</b><span>Try another filter.</span></div>}
-                    </div>
-                    <div style={{ textAlign: 'center', marginTop: '20px', padding: '15px 0' }}>
-                      <button style={{ background: 'transparent', border: 'none', color: '#8898c6', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', width: '100%' }}>
-                        Expand <ChevronRight size={14} style={{ transform: 'rotate(90deg)' }} />
+            </>
+          )}
+
+          {/* 8 & 9. Games Catalog & Grid */}
+          <section style={{ marginTop: activeProvider ? '10px' : '0' }}>
+            {activeProvider ? (
+              <div style={{ display: 'flex', gap: '12px', padding: '0 14px' }}>
+                <div ref={sidebarRef} className="category-sidebar" style={{ display: 'flex', flexDirection: 'column', width: '90px', flexShrink: 0, gap: '6px', maxHeight: 'calc(100vh - 140px)', overflowY: 'auto', paddingRight: '4px', position: 'sticky', top: '70px', zIndex: 5 }}>
+                  {dynamicProviders.map(provider => (
+                    <button
+                      id={`provider-btn-${provider}`}
+                      key={provider}
+                      onClick={() => {
+                        setActiveProvider(provider);
+                        setProviderGameFilter('All');
+                        setProviderTab('All');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 6px', background: activeProvider === provider ? 'rgba(255,255,255,0.08)' : 'transparent', border: activeProvider === provider ? '1px solid rgba(244,195,90,0.5)' : '1px solid transparent', borderRadius: '8px', color: activeProvider === provider ? '#f4c35a' : '#ccd6f6', cursor: 'pointer', textAlign: 'left', fontSize: '11px', fontWeight: 'bold' }}
+                    >
+                      {renderProviderLogo(provider)}
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{provider}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div style={{ flexGrow: 1, minWidth: 0 }}>
+                  <div className="provider-category-filters" style={{ margin: '0 0 12px' }}>
+                    {(['All', 'Slots', 'Aviator', 'Dragon Tiger', 'Triple 7', 'Suspended'] as const).map(filter => (
+                      <button
+                        key={filter}
+                        type="button"
+                        className={providerGameFilter === filter ? 'active' : ''}
+                        onClick={() => {
+                          setProviderGameFilter(filter);
+                          setProviderTab('All');
+                          setSearch('');
+                        }}
+                      >
+                        {filter}
                       </button>
-                    </div>
+                    ))}
                   </div>
-                ) : (
-                  <div className="home-category-browser">
-                    <div className="home-category-avatars" aria-label="Game categories">
-                      {homeCategoryOptions.map(option => (
-                        <button
-                          type="button"
-                          key={option.id}
-                          className={`home-category-avatar${activeCategory === option.id ? ' active' : ''}`}
-                          onClick={() => {
-                            setActiveCategory(option.id);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
-                          aria-pressed={activeCategory === option.id}
-                        >
-                          <img src={option.image} alt="" />
-                          <span>{option.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                    {(() => {
-                      const selectedCategory = homeCategoryOptions.find(option => option.id === activeCategory) ?? homeCategoryOptions[0];
-                      const selectedGames = selectedCategory ? getHomeCategoryGames(selectedCategory.id) : [];
-                      return (
-                        <section id={`category-${selectedCategory?.id ?? 'slots'}`} className="category-section selected-home-category">
-                          <div className="selected-category-heading">
-                            <h2>{selectedCategory?.label} ({selectedGames.length})</h2>
-                            <div className="currency-filter">
-                              <button className={inrFilter ? 'active' : ''} onClick={() => setInrFilter(true)}>INR Available</button>
-                              <button className={!inrFilter ? 'active' : ''} onClick={() => setInrFilter(false)}>All</button>
-                            </div>
-                          </div>
-                          <div className="game-grid home-games-grid">
-                            {selectedGames.length
-                              ? selectedGames.map(renderGameCard)
-                              : <div className="empty-state" style={{ gridColumn: '1 / -1' }}><b>No active games in this category</b></div>}
-                          </div>
-                        </section>
-                      );
-                    })()}
-                    {loadingMore && (
-                      <div className="game-grid home-games-grid" style={{ marginTop: '15px' }}>
-                        {[1, 2, 3, 4].map((item) => <div className="game-card skeleton" key={`skel-${item}`} style={{ aspectRatio: '1/1', borderRadius: '12px' }} />)}
+
+                  <div className="malt-game-grid" style={{ padding: 0 }}>
+                    {providerGames.length ? providerGames.map(renderGameCard) : (
+                      <div className="empty-state" style={{ gridColumn: '1 / -1', padding: '40px 0', textAlign: 'center' }}>
+                        <b>No games in this list</b>
                       </div>
                     )}
                   </div>
-                )
-              )}
-            </div>
+                </div>
+              </div>
+            ) : (
+              <div>
+                {(() => {
+                  const selectedCategory = homeCategoryOptions.find(option => option.id === activeCategory) ?? homeCategoryOptions[0];
+                  const selectedGames = selectedCategory ? getHomeCategoryGames(selectedCategory.id) : [];
+                  const categoryTitle = selectedCategory?.label || 'Slots';
+
+                  return (
+                    <>
+                      <div className="malt-catalog-header">
+                        <div className="malt-catalog-title-group">
+                          <h2 className="malt-catalog-title">{categoryTitle.toUpperCase()}</h2>
+                          <span className="malt-game-count">{selectedGames.length} GAMES</span>
+                        </div>
+                        <div className="malt-currency-toggle">
+                          <button
+                            className={`malt-curr-btn ${inrFilter ? 'active' : ''}`}
+                            onClick={() => setInrFilter(true)}
+                          >
+                            INR
+                          </button>
+                          <button
+                            className={`malt-curr-btn ${!inrFilter ? 'active' : ''}`}
+                            onClick={() => setInrFilter(false)}
+                          >
+                            ALL
+                          </button>
+                        </div>
+                      </div>
+
+                      {loading ? (
+                        <div className="malt-game-grid">
+                          {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+                            <div
+                              key={item}
+                              className="malt-game-card"
+                            >
+                              <div className="malt-card-thumb-wrap skeleton" />
+                              <div style={{ height: '12px', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', marginTop: '6px' }} />
+                            </div>
+                          ))}
+                        </div>
+                      ) : search ? (
+                        filteredGames.length ? (
+                          <div className="malt-game-grid">
+                            {filteredGames.map(renderGameCard)}
+                          </div>
+                        ) : (
+                          <div className="empty-state" style={{ textAlign: 'center', padding: '40px 0', color: '#8898c6' }}>
+                            <Search size={25} style={{ margin: '0 auto 10px' }} />
+                            <b>No games found</b>
+                          </div>
+                        )
+                      ) : (
+                        <div className="malt-game-grid">
+                          {selectedGames.length ? (
+                            selectedGames.map(renderGameCard)
+                          ) : (
+                            <div className="empty-state" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px 0' }}>
+                              <b>No active games in this category</b>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {loadingMore && (
+                        <div className="malt-game-grid" style={{ marginTop: '10px' }}>
+                          {[1, 2, 3, 4].map((item) => (
+                            <div key={`skel-${item}`} className="malt-game-card">
+                              <div className="malt-card-thumb-wrap skeleton" />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            )}
           </section>
         </main>}
 
-        <nav className="bottom-nav"><button className={view === 'home' ? 'active' : ''} onClick={() => setView('home')}><Home size={20} /><span>Home</span></button><button className={view === 'promos' ? 'active' : ''} onClick={() => setView('promos')}><Gift size={20} /><span>Promos</span></button><button className="deposit-nav" onClick={openDeposit}><span><Zap size={21} fill="currentColor" /></span><small>Deposit</small></button><button className={view === 'vip' ? 'active' : ''} onClick={() => setView('vip')}><Trophy size={20} /><span>VIP</span></button><button className={view === 'profile' ? 'active' : ''} onClick={() => setView('profile')}>{user ? <div style={{ width: '22px', height: '22px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #f4c35a' }}><img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id || 'User'}&backgroundColor=f4c35a`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', color: 'transparent' }} /></div> : <UserRound size={20} />}<span>Profile</span></button></nav>
-        <button className="floating-support" aria-label="Open WhatsApp support" onClick={openSupport}><Headphones size={20} /><span>Live help</span></button>
+        {/* 10. Floating Support Button */}
+        <button
+          className="malt-floating-support"
+          aria-label="Open support"
+          onClick={openSupport}
+        >
+          <Headphones size={22} />
+        </button>
+
+        {/* 11. Fixed Bottom Navigation */}
+        <nav className="malt-bottom-nav">
+          <button
+            className={`malt-nav-btn ${view === 'home' ? 'active' : ''}`}
+            onClick={() => setView('home')}
+          >
+            <Home size={21} />
+            <span>Home</span>
+          </button>
+          <button
+            className={`malt-nav-btn ${view === 'promos' ? 'active' : ''}`}
+            onClick={() => setView('promos')}
+          >
+            <Gift size={21} />
+            <span>Promos</span>
+          </button>
+          <button
+            className="malt-deposit-btn"
+            onClick={openDeposit}
+            aria-label="Deposit"
+          >
+            <div className="malt-deposit-circle">
+              <Zap size={23} fill="currentColor" />
+            </div>
+            <span className="malt-deposit-text">Deposit</span>
+          </button>
+          <button
+            className={`malt-nav-btn ${view === 'vip' ? 'active' : ''}`}
+            onClick={() => setView('vip')}
+          >
+            <Trophy size={21} />
+            <span>VIP</span>
+          </button>
+          <button
+            className={`malt-nav-btn ${view === 'profile' ? 'active' : ''}`}
+            onClick={() => setView('profile')}
+          >
+            {user ? (
+              <div style={{ width: '22px', height: '22px', borderRadius: '50%', overflow: 'hidden', border: '1.5px solid #f4c35a' }}>
+                <img
+                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id || 'User'}&backgroundColor=f4c35a`}
+                  alt=""
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+            ) : (
+              <UserRound size={21} />
+            )}
+            <span>Profile</span>
+          </button>
+        </nav>
       </div>
       {modal && <div className="modal-backdrop" onClick={() => setModal(null)}><div className="modal" onClick={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setModal(null)}><X size={18} /></button>
       {modal === 'login' ? <>
