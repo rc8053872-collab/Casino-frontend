@@ -780,67 +780,6 @@ function App() {
                   : <main style={{ paddingBottom: '90px' }}>
           {!activeProvider && (
             <>
-              {/* 3. Hero Promotional Banner */}
-              <section className="malt-hero-section">
-                <div
-                  className="malt-hero-card"
-                  style={{ backgroundImage: `url(/welcome-banner.jpg)` }}
-                >
-                  <div className="malt-hero-overlay">
-                    <div className="malt-hero-title-group">
-                      <div className="malt-hero-title-top">WELCOME</div>
-                      <div className="malt-hero-title-bottom">BONUS</div>
-                    </div>
-                    <p className="malt-hero-subtitle">Your next big win starts here!</p>
-                    <button
-                      className="malt-hero-cta-btn"
-                      onClick={() => {
-                        if (games.length > 0) launch(games[0]);
-                        else openDeposit();
-                      }}
-                    >
-                      PLAY NOW ➔
-                    </button>
-                  </div>
-                  <div className="malt-hero-dots">
-                    {[0, 1, 2, 3].map((i) => (
-                      <span
-                        key={i}
-                        className={`malt-hero-dot ${heroSlide === i ? 'active' : ''}`}
-                        onClick={() => setHeroSlide(i)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </section>
-
-              {/* 4. Live Wins Section */}
-              <section className="malt-live-section">
-                <div className="malt-live-container">
-                  <div className="malt-live-tag">
-                    <span>🔥</span>
-                    <span>Live Wins</span>
-                  </div>
-                  <div className="malt-live-ticker">
-                    {winners.map((winner, idx) => (
-                      <div key={idx} className="malt-live-card">
-                        <img
-                          src={winner.image}
-                          alt={winner.game}
-                          className="malt-live-thumb"
-                          onError={(e) => { (e.target as HTMLImageElement).src = '/category/slot-new.png'; }}
-                        />
-                        <div className="malt-live-info">
-                          <span className="malt-live-user">{winner.user}</span>
-                          <span className="malt-live-win">
-                            won <strong>{winner.amount}</strong>
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </section>
 
               {/* 5. Quick Access Cards */}
               <section className="malt-quick-grid">
