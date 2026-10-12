@@ -7,7 +7,7 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: 'https://api.maltiplayx.com',
+        target: 'http://casino-baac-env.eba-9kvg9eap.ap-southeast-2.elasticbeanstalk.com',
         changeOrigin: true,
         secure: false,
         timeout: 60000,

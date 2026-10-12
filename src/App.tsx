@@ -7,6 +7,8 @@ import { getBalance } from './api/wallet'
 import { FairPlayPage, InvitePromoPage, ProfilePage, SupportPage, VipPage } from './components/MemberPages'
 import { apiClient } from './api/client'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://casino-baac-env.eba-9kvg9eap.ap-southeast-2.elasticbeanstalk.com/api';
+
 declare global {
   namespace JSX {
     interface IntrinsicElements {
@@ -72,7 +74,7 @@ function DepositModal({ onClose, user }: { onClose: () => void, user: any }) {
   const [message, setMessage] = useState('');
   
   useEffect(() => {
-    fetch(import.meta.env.VITE_API_URL + '/v1/wallet/settings', {
+    fetch(API_BASE + '/wallet/settings', {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     })
     .then(res => res.json())
@@ -87,7 +89,7 @@ function DepositModal({ onClose, user }: { onClose: () => void, user: any }) {
     
     setLoading(true);
     try {
-      const res = await fetch(import.meta.env.VITE_API_URL + '/v1/wallet/deposit', {
+      const res = await fetch(API_BASE + '/wallet/deposit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ amount: Number(amount), utrNumber: utr })
@@ -226,7 +228,7 @@ function App() {
     // Check auth on load
     const token = localStorage.getItem('token');
     if (token) {
-      fetch(import.meta.env.VITE_API_URL + '/v1/auth/me', {
+      fetch(API_BASE + '/v1/auth/me', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       .then(res => res.json())
@@ -274,7 +276,7 @@ function App() {
   // Automated 10-minute server API heartbeat ping (keeps server alive 24/7)
   useEffect(() => {
     const pingServer = () => {
-      const baseUrl = import.meta.env.VITE_API_URL || '';
+      const baseUrl = API_BASE.replace(/\/api\/?$/, '');
       fetch(`${baseUrl}/health`).catch(() => {});
       fetch(`${baseUrl}/api/ping`).catch(() => {});
     };
@@ -571,7 +573,7 @@ function App() {
     }
     setAuthLoading(true);
     try {
-      const res = await fetch(import.meta.env.VITE_API_URL + '/v1/auth/register', {
+      const res = await fetch(API_BASE + '/v1/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -609,7 +611,7 @@ function App() {
     }
     setAuthLoading(true);
     try {
-      const res = await fetch(import.meta.env.VITE_API_URL + '/v1/auth/login', {
+      const res = await fetch(API_BASE + '/v1/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier: authForm.identifier, password: authForm.password })
