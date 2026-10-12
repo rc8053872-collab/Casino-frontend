@@ -13,6 +13,7 @@ export type Game = {
   providerId?: string
   gameUid?: string
   category: string
+  subCategory?: string;
   image: string
   thumbnail?: string
   banner?: string
@@ -132,6 +133,7 @@ export const liveGameProvider: GameProvider = {
           providerId: g.providerId,
           gameUid: g.gameUid || g.providerId,
           category: g.category || 'slots',
+          subCategory: g.subCategory,
           thumbnail: g.thumbnail,
           banner: g.banner,
           image: imageUrl,
@@ -158,7 +160,16 @@ export const liveGameProvider: GameProvider = {
       const response = await apiClient.post<any, any>('/v1/games/launch', {
         game_slug: gameSlug
       });
-      return { sessionUrl: response.launch_url };
+      if (typeof response?.launch_url !== 'string') {
+        throw new Error('The game provider returned an invalid launch URL.');
+      }
+
+      const launchUrl = new URL(response.launch_url);
+      if (launchUrl.protocol !== 'https:' || !launchUrl.hostname || launchUrl.username || launchUrl.password) {
+        throw new Error('The game provider returned an invalid launch URL.');
+      }
+
+      return { sessionUrl: launchUrl.toString() };
     } catch (err: any) {
       const errorMessage = err.message || err.error || 'Failed to launch game. Please try again.';
       alert(errorMessage);

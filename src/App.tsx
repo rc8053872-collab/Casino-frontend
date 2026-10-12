@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { Bell, ChevronRight, Gift, Headphones, Home, LayoutGrid, Play, Search, ShieldCheck, Sparkles, Star, Trophy, UserRound, X, Zap, ArrowLeft, BadgeDollarSign, CalendarDays, ClipboardList, Coins, Fish, RefreshCcw, Spade, WalletCards, Volume2, Mail } from 'lucide-react'
 import { Category, Game, liveGameProvider } from './services/gameProvider'
-import { DragonTigerGame } from './DragonTigerGame'
 import { getGameLogo } from './utils/getGameLogo'
 import { DepositWorkflow } from './components/DepositWorkflow'
 import { getBalance } from './api/wallet'
@@ -137,7 +136,7 @@ function App() {
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState<'login' | 'deposit' | 'register' | null>(null)
   const [loading, setLoading] = useState(true)
-  const [view, setView] = useState<'home' | 'promos' | 'vip' | 'profile' | 'fairplay' | 'support' | 'dragon-tiger'>('home')
+  const [view, setView] = useState<'home' | 'promos' | 'vip' | 'profile' | 'fairplay' | 'support'>('home')
   const [inrFilter, setInrFilter] = useState(true)
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -392,6 +391,8 @@ function App() {
   const getHomeGameCategory = (game: Game) => {
     const category = game.category.trim().toLowerCase();
     const name = game.name.trim().toLowerCase();
+    const subCategory = game.subCategory?.trim().toLowerCase();
+    if (subCategory === 'aviator' || subCategory === 'other') return subCategory;
     if (name === 'aviator extra bet') return 'minigames';
     if (name.includes('aviator')) return 'aviator';
     if (/dragon[\s-]*tiger/i.test(name)) return 'dragon-tiger';
@@ -412,6 +413,7 @@ function App() {
     { id: 'slots', label: 'Slots', image: '/category/cat-slots.jpg' },
     { id: 'minigames', label: 'Mini Games', image: '/category/cat-minigames.jpg' },
     { id: 'aviator', label: 'Aviator', image: '/category/cat-aviator.jpg' },
+    { id: 'dragon-tiger', label: 'Dragon Tiger', image: '/icons/dragon.jpg' },
     { id: 'cards', label: 'Cards', image: '/category/cat-cards.jpg' },
     { id: 'live', label: 'Live Casino', image: '/category/cat-live.jpg' },
     { id: 'fishing', label: 'Fish', image: '/category/cat-fish.jpg' },
@@ -420,7 +422,6 @@ function App() {
     { id: 'other', label: 'More', image: '/icons/diamond-treasure.webp' },
   ].filter(option =>
     getHomeCategoryGames(option.id).length > 0
-    || option.id === 'dragon-tiger'
     || ['slots', 'minigames', 'aviator', 'cards', 'live', 'fishing', 'lottery'].includes(option.id)
   );
   const providerGames = filteredGames
@@ -538,10 +539,6 @@ function App() {
       return;
     }
     
-    if (game.name === 'Dragon Tiger') {
-      setView('dragon-tiger')
-      return
-    }
     try {
       const session = await liveGameProvider.launchGame(game.id)
       if (session.sessionUrl) {
@@ -626,10 +623,6 @@ function App() {
     setUser(null);
     setView('profile');
   };
-
-  if (view === 'dragon-tiger') {
-    return <DragonTigerGame onClose={() => setView('home')} />
-  }
 
   return (
     <div className="malt-viewport">

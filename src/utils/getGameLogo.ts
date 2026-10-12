@@ -9,6 +9,15 @@ export function getGameLogo(game: any): string {
   const isArcade = game.category?.toUpperCase() === 'ARCADE';
   const isSlot = /^slots?$/i.test(game.category || '');
   const isGeneratedPlaceholder = /\/game-assets\/[^/]+\/(?:thumbnail|banner)\.webp(?:[?#]|$)/i.test(thumbnail);
+  if (normalizedName === 'aviator') {
+    return `/icons/aviator.jpg?v=4`;
+  }
+  if (/^dragon[\s-]*tiger$/i.test(normalizedName)) {
+    return `/icons/dragon.jpg?v=4`;
+  }
+  if (game.slug === 'aviator-extra-bet-jdb') {
+    return `/game-art/${encodeURIComponent(game.slug)}.webp${cb}`;
+  }
   if ((isArcade || isSlot) && game.slug) {
     return `/game-art/${encodeURIComponent(game.slug)}.webp${cb}`;
   }
