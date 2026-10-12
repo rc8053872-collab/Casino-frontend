@@ -869,23 +869,25 @@ function App() {
                     <span>🔥</span>
                     <span>Live Wins</span>
                   </div>
-                  <div className="malt-live-ticker">
-                    {winners.map((winner, idx) => (
-                      <div key={idx} className="malt-live-card">
-                        <img
-                          src={winner.image}
-                          alt={winner.game}
-                          className="malt-live-thumb"
-                          onError={(e) => { (e.target as HTMLImageElement).src = '/category/cat-slots.jpg'; }}
-                        />
-                        <div className="malt-live-info">
-                          <span className="malt-live-user">{winner.user}</span>
-                          <span className="malt-live-win">
-                            won <strong>{winner.amount}</strong>
-                          </span>
+                  <div className="malt-live-ticker-wrap">
+                    <div className="malt-live-ticker-track">
+                      {[...winners, ...winners].map((winner, idx) => (
+                        <div key={idx} className="malt-live-card">
+                          <img
+                            src={winner.image}
+                            alt={winner.game}
+                            className="malt-live-thumb"
+                            onError={(e) => { (e.target as HTMLImageElement).src = '/category/cat-slots.jpg'; }}
+                          />
+                          <div className="malt-live-info">
+                            <span className="malt-live-user">{winner.user}</span>
+                            <span className="malt-live-win">
+                              won <strong>{winner.amount}</strong>
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
               </section>
