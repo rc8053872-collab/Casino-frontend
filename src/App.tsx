@@ -779,6 +779,116 @@ function App() {
                   : <main style={{ paddingBottom: '90px' }}>
           {!activeProvider && (
             <>
+              {/* 3. Hero Promotional Banner */}
+              <section className="malt-hero-section">
+                {(() => {
+                  const heroSlides = [
+                    {
+                      top: 'WELCOME',
+                      bottom: 'BONUS',
+                      subtitle: '100% Match bonus up to ₹10,000 on 1st deposit',
+                      image: '/welcome-banner.jpg',
+                      cta: 'CLAIM NOW ➔',
+                      action: openDeposit,
+                    },
+                    {
+                      top: 'AVIATOR',
+                      bottom: 'MULTIPLIER',
+                      subtitle: 'Cash out before the plane flies away! Up to 100x',
+                      image: '/category/cat-aviator.jpg',
+                      cta: 'PLAY NOW ➔',
+                      action: () => {
+                        const aviatorGame = games.find(g => g.name.toLowerCase().includes('aviator'));
+                        if (aviatorGame) launch(aviatorGame);
+                        else setActiveCategory('aviator');
+                      },
+                    },
+                    {
+                      top: 'VIP CLUB',
+                      bottom: 'REWARDS',
+                      subtitle: 'Unlock weekly cashbacks, perks & private VIP manager',
+                      image: '/category/cat-minigames.jpg',
+                      cta: 'EXPLORE VIP ➔',
+                      action: () => setView('vip'),
+                    },
+                    {
+                      top: 'MEGA',
+                      bottom: 'JACKPOTS',
+                      subtitle: 'Spin premium slots & win life-changing cash jackpots',
+                      image: '/category/cat-slots.jpg',
+                      cta: 'SPIN NOW ➔',
+                      action: () => setActiveCategory('slots'),
+                    },
+                  ];
+                  const currentSlide = heroSlides[heroSlide] || heroSlides[0];
+
+                  return (
+                    <div
+                      className="malt-hero-card"
+                      style={{ backgroundImage: `url(${currentSlide.image})` }}
+                      onClick={currentSlide.action}
+                    >
+                      <div className="malt-hero-overlay">
+                        <div className="malt-hero-title-group">
+                          <div className="malt-hero-title-top">{currentSlide.top}</div>
+                          <div className="malt-hero-title-bottom">{currentSlide.bottom}</div>
+                        </div>
+                        <p className="malt-hero-subtitle">{currentSlide.subtitle}</p>
+                        <button
+                          type="button"
+                          className="malt-hero-cta-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            currentSlide.action();
+                          }}
+                        >
+                          {currentSlide.cta}
+                        </button>
+                      </div>
+                      <div className="malt-hero-dots">
+                        {heroSlides.map((_, i) => (
+                          <span
+                            key={i}
+                            className={`malt-hero-dot ${heroSlide === i ? 'active' : ''}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setHeroSlide(i);
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </section>
+
+              {/* 4. Live Wins Section */}
+              <section className="malt-live-section">
+                <div className="malt-live-container">
+                  <div className="malt-live-tag">
+                    <span>🔥</span>
+                    <span>Live Wins</span>
+                  </div>
+                  <div className="malt-live-ticker">
+                    {winners.map((winner, idx) => (
+                      <div key={idx} className="malt-live-card">
+                        <img
+                          src={winner.image}
+                          alt={winner.game}
+                          className="malt-live-thumb"
+                          onError={(e) => { (e.target as HTMLImageElement).src = '/category/cat-slots.jpg'; }}
+                        />
+                        <div className="malt-live-info">
+                          <span className="malt-live-user">{winner.user}</span>
+                          <span className="malt-live-win">
+                            won <strong>{winner.amount}</strong>
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
 
               {/* 5. Quick Access Cards */}
               <section className="malt-quick-grid">
