@@ -9,6 +9,9 @@ export function getGameLogo(game: any): string {
   const isArcade = game.category?.toUpperCase() === 'ARCADE';
   const isSlot = /^slots?$/i.test(game.category || '');
   const isGeneratedPlaceholder = /\/game-assets\/[^/]+\/(?:thumbnail|banner)\.webp(?:[?#]|$)/i.test(thumbnail);
+  if (game.slug === 'dragon-tiger-joker') {
+    return `/game-art/${encodeURIComponent(game.slug)}.webp?v=4`;
+  }
   if (normalizedName === 'aviator') {
     return `/icons/aviator.jpg?v=4`;
   }
