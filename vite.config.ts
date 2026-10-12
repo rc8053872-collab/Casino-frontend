@@ -9,6 +9,9 @@ export default defineConfig({
       '/api': {
         target: 'https://api.maltiplayx.com',
         changeOrigin: true,
+        secure: false,
+        timeout: 60000,
+        proxyTimeout: 60000,
       },
     },
   },

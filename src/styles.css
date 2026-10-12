@@ -3840,7 +3840,7 @@ button {
   background: #040612 radial-gradient(circle at 50% 0%, #0d143a 0%, #060919 45%, #03040c 100%);
   color: var(--malt-text);
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .malt-shell {
@@ -3869,9 +3869,8 @@ button {
   background: linear-gradient(90deg, #120b30 0%, #201353 50%, #0d0a28 100%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   font-size: 11px;
-  z-index: 50;
-  position: sticky;
-  top: 0;
+  position: relative;
+  z-index: 40;
 }
 
 .malt-promo-left {
@@ -3949,17 +3948,13 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(6, 9, 25, 0.94);
+  background: rgba(6, 9, 25, 0.96);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(143, 157, 215, 0.12);
   position: sticky;
   top: 0;
-  z-index: 45;
-}
-
-.malt-header.has-promo {
-  top: 36px;
+  z-index: 50;
 }
 
 .malt-brand-group {

@@ -311,9 +311,18 @@ function App() {
 
       if (loadFullHomeCatalog && page === 1) {
         for (let nextPage = 2; nextPage <= totalPages; nextPage += 1) {
-          const nextResult = await liveGameProvider.getGames(apiCategory, inrFilter, 'All', apiSearch, nextPage, pageLimit, apiGameType);
-          fetchedGames = [...fetchedGames, ...nextResult.games];
-          totalPages = Math.max(totalPages, nextResult.pagination.totalPages);
+          try {
+            const nextResult = await liveGameProvider.getGames(apiCategory, inrFilter, 'All', apiSearch, nextPage, pageLimit, apiGameType);
+            if (nextResult && nextResult.games && nextResult.games.length > 0) {
+              fetchedGames = [...fetchedGames, ...nextResult.games];
+              totalPages = Math.max(totalPages, nextResult.pagination.totalPages);
+            } else {
+              break;
+            }
+          } catch (err) {
+            console.warn('Pagination load fallback for page', nextPage, err);
+            break;
+          }
         }
       }
 
