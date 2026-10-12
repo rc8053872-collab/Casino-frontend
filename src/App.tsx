@@ -404,16 +404,15 @@ function App() {
     { id: 'minigames', label: 'Mini Games', image: '/category/cat-minigames.jpg' },
     { id: 'aviator', label: 'Aviator', image: '/category/cat-aviator.jpg' },
     { id: 'cards', label: 'Cards', image: '/category/cat-cards.jpg' },
-    { id: 'live', label: 'Live Games', image: '/icons/handicap-baccarat.webp' },
+    { id: 'live', label: 'Live Casino', image: '/category/cat-live.jpg' },
+    { id: 'fishing', label: 'Fish', image: '/category/cat-fish.jpg' },
     { id: 'lottery', label: 'Lottery', image: '/icons/25-coins-santas-jackpot.webp' },
-    { id: 'fishing', label: 'Fish', image: '/icons/fishing-cover.webp' },
     { id: 'sports', label: 'Sports', image: '/icons/aviator.jpg' },
-    { id: 'other', label: 'More Games', image: '/icons/diamond-treasure.webp' },
+    { id: 'other', label: 'More', image: '/icons/diamond-treasure.webp' },
   ].filter(option =>
     getHomeCategoryGames(option.id).length > 0
     || option.id === 'dragon-tiger'
-    || (option.id === 'fishing' && games.some(game => getHomeGameCategory(game) === option.id))
-    || ['slots', 'minigames', 'aviator', 'cards'].includes(option.id)
+    || ['slots', 'minigames', 'aviator', 'cards', 'live', 'fishing', 'lottery'].includes(option.id)
   );
   const providerGames = filteredGames
     .filter(game => game.provider === activeProvider)
@@ -829,9 +828,9 @@ function App() {
                 )}
               </div>
 
-              {/* 7. Category Navigation Cards */}
+              {/* 7. Category Navigation Cards (Side-Sliding) */}
               <div className="malt-categories-row" aria-label="Game categories">
-                {homeCategoryOptions.slice(0, 4).map(option => (
+                {homeCategoryOptions.map(option => (
                   <button
                     type="button"
                     key={option.id}
