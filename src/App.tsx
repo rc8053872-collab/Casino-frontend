@@ -717,28 +717,32 @@ function App() {
                   <Search size={19} />
                 </button>
 
-                <div
-                  className="malt-wallet-pill"
-                  onClick={user ? openDeposit : () => setModal('login')}
-                  title={user ? 'Click to deposit funds' : 'Click to log in'}
-                >
-                  <WalletCards size={14} color="#8e9bc7" />
-                  <span className="malt-wallet-amount">
-                    ₹{Number(user?.balance ?? 0).toLocaleString('en-IN')}
-                  </span>
-                  <span className="malt-wallet-plus">+</span>
-                </div>
+                {user ? (
+                  <>
+                    <div
+                      className="malt-wallet-pill"
+                      onClick={openDeposit}
+                      title="Click to deposit funds"
+                    >
+                      <WalletCards size={14} color="#8e9bc7" />
+                      <span className="malt-wallet-amount">
+                        ₹{Number(user.balance).toLocaleString('en-IN')}
+                      </span>
+                      <span className="malt-wallet-plus">+</span>
+                    </div>
 
-                <div
-                  className="malt-avatar-box"
-                  onClick={() => user ? setView('profile') : setModal('login')}
-                  title={user ? 'Open Profile' : 'Click to Log in'}
-                >
-                  <img
-                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'User'}&backgroundColor=f4c35a`}
-                    alt="Avatar"
-                  />
-                </div>
+                    <div
+                      className="malt-avatar-box"
+                      onClick={() => setView('profile')}
+                      title="Open Profile"
+                    >
+                      <img
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id || 'User'}&backgroundColor=f4c35a`}
+                        alt="Avatar"
+                      />
+                    </div>
+                  </>
+                ) : null}
               </div>
             </>
           )}
