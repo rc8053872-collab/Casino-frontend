@@ -1,67 +1,53 @@
-// test-gamecloud-api.js
-
 async function testGameLaunch() {
-    console.log("GameCloud API - Game Launch Test Start kar rahe hain...\n");
+  const resellerId = Number(process.env.GAMECLOUD_RESELLER_ID);
+  const apiToken = process.env.GAMECLOUD_API_TOKEN;
+  const secretKey = process.env.GAMECLOUD_SECRET_KEY;
+  const gatewayUrl = process.env.GAMECLOUD_BASE_URL || 'https://api.gamecloudapi.com';
 
-    // ⚠️ YAHAN APNA ASLI RESELLER ID DALEIN ⚠️
-    // Screenshot 2 me "reseller_id": 241 likha hai, aur code me 12. 
-    // Apna exact Operator ID yahan dalein.
-    const RESELLER_ID = 386; 
+  if (!Number.isInteger(resellerId) || resellerId <= 0 || !apiToken || !secretKey) {
+    throw new Error(
+      'Set GAMECLOUD_RESELLER_ID, GAMECLOUD_API_TOKEN, and GAMECLOUD_SECRET_KEY in the shell environment.'
+    );
+  }
 
-    // API Gateway URL (Aapke Docs ke according)
-    const GATEWAY_URL = 'https://api.gamecloudapi.com'; 
-    const launchUrl = `${GATEWAY_URL}/api/v1/game/launch`;
+  const launchUrl = `${gatewayUrl}/api/v1/game/launch`;
+  const payload = {
+    reseller_id: resellerId,
+    player_id: 'player_test_001',
+    game_uid: process.argv[2] || 'spribe_aviator',
+    mode: 'seamless',
+    currency_code: 'INR',
+    home_url: 'https://maltiplayx.com',
+  };
 
-    // Test karne ke liye dummy player data
-    const payload = {
-        reseller_id: 306,
-        player_id: "player_test_001",
-        game_uid: process.argv[2] || "spribe_aviator",
-        mode: "seamless",
-        currency_code: "INR",
-        home_url: "https://maltiplayx.com"
-    };
+  const response = await fetch(launchUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Origin: 'https://maltiplayx.com',
+      Referer: 'https://maltiplayx.com/',
+      'X-API-Token': apiToken,
+      'X-Secret-Key': secretKey,
+    },
+    body: JSON.stringify(payload),
+  });
 
-    try {
-        console.log(`Connecting to: ${launchUrl}`);
-        console.log("Payload:", payload);
-        
-        const response = await fetch(launchUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Origin': 'https://maltiplayx.com',
-                'Referer': 'https://maltiplayx.com/',
-                'X-API-Token': 'bfc369fd4098461aa92ca32987be5668',
-                'X-Secret-Key': '6d7460454585e11d17cac11f553275ef6d89756adfdb97b7fafe88cec1466dbe'
-            },
-            body: JSON.stringify(payload)
-        });
+  const rawText = await response.text();
+  let data;
+  try {
+    data = JSON.parse(rawText);
+  } catch {
+    data = { message: 'Provider returned a non-JSON response.' };
+  }
 
-        const rawText = await response.text();
-        let data;
-        try {
-            data = JSON.parse(rawText);
-        } catch (e) {
-            data = rawText; 
-        }
-
-        if (response.ok) {
-            console.log("\n✅ SUCCESS: Game Launch API Work Kar Rahi Hai!");
-            console.log("Response Data:", data);
-            if (data.status === 'SUCCESS') {
-                console.log("\n👉 Game Launch URL:", data.game_launch_url);
-                console.log("(Aap is link ko browser me open karke game test kar sakte hain)");
-            }
-        } else {
-            console.log(`\n❌ FAILED: API ne error return kiya (Status: ${response.status})`);
-            console.log("Error Details:\n", data);
-        }
-
-    } catch (error) {
-        console.error("\n❌ ERROR: API se connect nahi ho paaya.");
-        console.error("Error Message:", error.message);
-    }
+  console.log(`Provider HTTP status: ${response.status}`);
+  console.log(`Provider status: ${data?.status || 'UNKNOWN'}`);
+  if (!response.ok || data?.status !== 'SUCCESS') {
+    console.error('Provider error:', data?.error || data?.message || 'No provider error message.');
+  }
 }
 
-testGameLaunch();
+testGameLaunch().catch((error) => {
+  console.error('GameCloud launch test failed:', error.message);
+  process.exitCode = 1;
+});
