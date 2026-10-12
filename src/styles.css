@@ -4885,3 +4885,91 @@ button {
   margin-top: 3px;
 }
 
+/* Guest Auth Bar on Page */
+.malt-guest-strip {
+  margin: 10px 14px 4px;
+  background: linear-gradient(90deg, rgba(16, 23, 60, 0.95) 0%, rgba(28, 38, 92, 0.9) 100%);
+  border: 1px solid rgba(244, 195, 90, 0.28);
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+}
+
+.malt-guest-strip-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.malt-guest-chip {
+  background: rgba(244, 195, 90, 0.15);
+  color: var(--malt-gold);
+  border: 1px solid rgba(244, 195, 90, 0.4);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.malt-guest-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: #dbe2fb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.malt-guest-strip-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.malt-guest-btn-login {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ccd6f6;
+  border: 1px solid rgba(143, 157, 215, 0.3);
+  border-radius: 8px;
+  padding: 5px 11px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.malt-guest-btn-login:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.malt-guest-btn-signup {
+  background: var(--malt-gold);
+  color: #16142b;
+  border: none;
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(244, 195, 90, 0.35);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.malt-guest-btn-signup:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+

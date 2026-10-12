@@ -717,49 +717,28 @@ function App() {
                   <Search size={19} />
                 </button>
 
-                {user ? (
-                  <>
-                    <div
-                      className="malt-wallet-pill"
-                      onClick={openDeposit}
-                      title="Click to deposit funds"
-                    >
-                      <WalletCards size={14} color="#8e9bc7" />
-                      <span className="malt-wallet-amount">
-                        ₹{Number(user.balance || 0).toLocaleString('en-IN')}
-                      </span>
-                      <span className="malt-wallet-plus">+</span>
-                    </div>
+                <div
+                  className="malt-wallet-pill"
+                  onClick={user ? openDeposit : () => setModal('login')}
+                  title={user ? 'Click to deposit funds' : 'Click to log in'}
+                >
+                  <WalletCards size={14} color="#8e9bc7" />
+                  <span className="malt-wallet-amount">
+                    ₹{Number(user?.balance ?? 0).toLocaleString('en-IN')}
+                  </span>
+                  <span className="malt-wallet-plus">+</span>
+                </div>
 
-                    <div
-                      className="malt-avatar-box"
-                      onClick={() => setView('profile')}
-                      title="Open Profile"
-                    >
-                      <img
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}&backgroundColor=f4c35a`}
-                        alt="Avatar"
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <div className="malt-auth-actions">
-                    <button
-                      type="button"
-                      className="malt-login-btn"
-                      onClick={() => { setAuthError(''); setModal('login'); }}
-                    >
-                      Login
-                    </button>
-                    <button
-                      type="button"
-                      className="malt-signup-btn"
-                      onClick={() => { setAuthError(''); setModal('register'); }}
-                    >
-                      Sign Up
-                    </button>
-                  </div>
-                )}
+                <div
+                  className="malt-avatar-box"
+                  onClick={() => user ? setView('profile') : setModal('login')}
+                  title={user ? 'Open Profile' : 'Click to Log in'}
+                >
+                  <img
+                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'User'}&backgroundColor=f4c35a`}
+                    alt="Avatar"
+                  />
+                </div>
               </div>
             </>
           )}
@@ -809,6 +788,32 @@ function App() {
                   : <main style={{ paddingBottom: '90px' }}>
           {!activeProvider && (
             <>
+              {/* Guest Auth Bar on Page */}
+              {!user && (
+                <div className="malt-guest-strip">
+                  <div className="malt-guest-strip-left">
+                    <span className="malt-guest-chip">GUEST</span>
+                    <span className="malt-guest-text">Login to play & win real cash</span>
+                  </div>
+                  <div className="malt-guest-strip-actions">
+                    <button
+                      type="button"
+                      className="malt-guest-btn-login"
+                      onClick={() => { setAuthError(''); setModal('login'); }}
+                    >
+                      Login
+                    </button>
+                    <button
+                      type="button"
+                      className="malt-guest-btn-signup"
+                      onClick={() => { setAuthError(''); setModal('register'); }}
+                    >
+                      Sign Up
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* 3. Hero Promotional Banner */}
               <section className="malt-hero-section">
                 {(() => {
