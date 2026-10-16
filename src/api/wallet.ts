@@ -45,6 +45,8 @@ export interface WithdrawalBankDetails {
   accountNumber: string;
   ifscCode: string;
   branchName: string;
+  accountHolderName?: string;
+  userName?: string;
 }
 
 export interface WithdrawalResponse {

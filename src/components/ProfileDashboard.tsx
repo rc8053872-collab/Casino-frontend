@@ -125,6 +125,7 @@ export function ProfileDashboard({
 
   // Withdrawal form state
   const [amount, setAmount] = useState('');
+  const [accountHolderName, setAccountHolderName] = useState(() => localStorage.getItem('user_bank_holder') || user?.username || '');
   const [accountNumber, setAccountNumber] = useState(() => localStorage.getItem('user_bank_account') || '');
   const [ifscCode, setIfscCode] = useState(() => localStorage.getItem('user_bank_ifsc') || '');
   const [branchName, setBranchName] = useState(() => localStorage.getItem('user_bank_branch') || '');
@@ -135,6 +136,7 @@ export function ProfileDashboard({
     feePercent: number;
     feeAmount: number;
     finalAmount: number;
+    accountHolderName: string;
     accountNumber: string;
     ifscCode: string;
     branchName: string;
@@ -269,19 +271,22 @@ export function ProfileDashboard({
       showToast('Insufficient wallet balance.', 'error');
       return;
     }
-    if (!accountNumber.trim() || !ifscCode.trim() || !branchName.trim()) {
-      showToast('Please provide complete bank details.', 'error');
+    if (!accountHolderName.trim() || !accountNumber.trim() || !ifscCode.trim() || !branchName.trim()) {
+      showToast('Please provide complete bank details including Account Holder Name.', 'error');
       return;
     }
 
     setSubmittingWithdrawal(true);
     try {
       const result = await submitWithdrawal(val, {
+        accountHolderName: accountHolderName.trim(),
+        userName: accountHolderName.trim(),
         accountNumber: accountNumber.trim(),
         ifscCode: ifscCode.trim(),
         branchName: branchName.trim()
       });
       // Save details locally for user convenience
+      localStorage.setItem('user_bank_holder', accountHolderName.trim());
       localStorage.setItem('user_bank_account', accountNumber.trim());
       localStorage.setItem('user_bank_ifsc', ifscCode.trim());
       localStorage.setItem('user_bank_branch', branchName.trim());
@@ -303,6 +308,7 @@ export function ProfileDashboard({
         feePercent: calculatedFeePercent,
         feeAmount: calculatedFeeAmount,
         finalAmount: calculatedFinalAmount,
+        accountHolderName: accountHolderName.trim(),
         accountNumber: accountNumber.trim(),
         ifscCode: ifscCode.trim(),
         branchName: branchName.trim(),
@@ -323,10 +329,11 @@ export function ProfileDashboard({
   // Save bank accounts
   const handleSaveBankDetails = (e: FormEvent) => {
     e.preventDefault();
-    if (!accountNumber.trim() || !ifscCode.trim()) {
-      showToast('Account number and IFSC code are required.', 'error');
+    if (!accountHolderName.trim() || !accountNumber.trim() || !ifscCode.trim() || !branchName.trim()) {
+      showToast('Account Holder Name, Account number, IFSC code, and Branch are required.', 'error');
       return;
     }
+    localStorage.setItem('user_bank_holder', accountHolderName.trim());
     localStorage.setItem('user_bank_account', accountNumber.trim());
     localStorage.setItem('user_bank_ifsc', ifscCode.trim());
     localStorage.setItem('user_bank_branch', branchName.trim());
@@ -790,6 +797,25 @@ export function ProfileDashboard({
             </div>
             <ChevronRight size={18} className="mp-chevron" />
           </button>
+
+          {/* Download Android App */}
+          <a
+            href="/Maltiplayx.apk"
+            download="Maltiplayx.apk"
+            className="mp-settings-item"
+            style={{ textDecoration: 'none' }}
+          >
+            <div className="mp-settings-left">
+              <div className="mp-settings-icon" style={{ background: 'rgba(244, 195, 90, 0.15)', color: '#f4c35a' }}>
+                <Smartphone size={18} />
+              </div>
+              <div className="mp-settings-text">
+                <h4>Download Android App</h4>
+                <p>Install MaltiplayX APK directly</p>
+              </div>
+            </div>
+            <ChevronRight size={18} className="mp-chevron" />
+          </a>
         </div>
       </section>
 
@@ -943,6 +969,17 @@ export function ProfileDashboard({
                 </div>
 
                 <div className="mp-form-group">
+                  <label>Account Holder Name / User Name</label>
+                  <input
+                    type="text"
+                    placeholder="Enter name as per bank account"
+                    value={accountHolderName}
+                    onChange={e => setAccountHolderName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="mp-form-group">
                   <label>Bank Account Number</label>
                   <input
                     type="text"
@@ -1037,6 +1074,10 @@ export function ProfileDashboard({
                     </strong>
                   </div>
                   <div className="mp-receipt-divider" />
+                  <div className="mp-receipt-row">
+                    <span>Account Holder:</span>
+                    <strong className="text-white">{withdrawReceipt.accountHolderName}</strong>
+                  </div>
                   <div className="mp-receipt-row">
                     <span>Bank Account:</span>
                     <span>•••• {withdrawReceipt.accountNumber.slice(-4)}</span>
@@ -1457,6 +1498,17 @@ export function ProfileDashboard({
                 <p className="mp-modal-description">
                   Save your withdrawal bank details. When you request a withdrawal, your payout is routed to this account.
                 </p>
+
+                <div className="mp-form-group">
+                  <label>Account Holder Name / User Name</label>
+                  <input
+                    type="text"
+                    placeholder="Enter name as per bank account"
+                    value={accountHolderName}
+                    onChange={e => setAccountHolderName(e.target.value)}
+                    required
+                  />
+                </div>
 
                 <div className="mp-form-group">
                   <label>Bank Account Number</label>

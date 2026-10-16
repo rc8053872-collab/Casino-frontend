@@ -649,12 +649,14 @@ function App() {
               <span className="malt-promo-desc">Get exclusive rewards on our app!</span>
             </div>
             <div className="malt-promo-actions">
-              <button
+              <a
+                href="/Maltiplayx.apk"
+                download="Maltiplayx.apk"
                 className="malt-promo-dl-btn"
-                onClick={() => alert('Download app starting...')}
+                title="Download MaltiplayX Android APK"
               >
                 Download now
-              </button>
+              </a>
               <button
                 className="malt-promo-close"
                 onClick={() => setPromoDismissed(true)}
