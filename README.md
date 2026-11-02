@@ -5,11 +5,20 @@ Premium casino lobby UI built in React and TypeScript with a mock game-provider 
 ## Run locally
 
 ```bash
+cd Casino-Backend-main
 npm install
 npm run dev
 ```
 
-The app runs in mock mode by default. Copy `.env.example` to `.env` when connecting a backend.
+Run the frontend from a second terminal, also opened at the workspace root:
+
+```bash
+cd Casino-frontend-main
+npm install
+npm run dev
+```
+
+The frontend sends `/api` requests through the Vite development proxy to the backend at `http://localhost:3001`. Set `VITE_API_URL` in `.env.development` to override this path if needed.
 
 ## Architecture
 
