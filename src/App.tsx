@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
-import { Bell, ChevronRight, Gift, Headphones, Home, LayoutGrid, Play, Search, ShieldCheck, Sparkles, Star, Trophy, UserRound, X, Zap, ArrowLeft, BadgeDollarSign, CalendarDays, ClipboardList, Coins, Fish, RefreshCcw, Spade, WalletCards, Volume2, Mail } from 'lucide-react'
+import {  Bell, ChevronRight, Gift, Headphones, Home, LayoutGrid, Play, Search, ShieldCheck, Sparkles, Star, Trophy, UserRound, X, Zap, ArrowLeft, BadgeDollarSign, CalendarDays, ClipboardList, Coins, Fish, RefreshCcw, Spade, WalletCards, Volume2, Mail , ChevronDown } from 'lucide-react'
 import { Category, Game, liveGameProvider } from './services/gameProvider'
 import { getGameLogo } from './utils/getGameLogo'
 import { DepositWorkflow } from './components/DepositWorkflow'
@@ -7,7 +7,7 @@ import { getBalance } from './api/wallet'
 import { FairPlayPage, InvitePromoPage, ProfilePage, SupportPage, VipPage } from './components/MemberPages'
 import { apiClient } from './api/client'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://casino-baac-env.eba-9kvg9eap.ap-southeast-2.elasticbeanstalk.com/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 declare global {
   namespace JSX {
@@ -23,15 +23,120 @@ type Account = { id: string; username?: string | null; email: string | null; pho
 
 
 
-const winners = [
-  { user: 'Player7***2', game: 'Golden Fortune', amount: '₹12,560', image: '/category/cat-slots.jpg' },
-  { user: 'User8***9', game: 'Dragon Treasure', amount: '₹8,400', image: '/category/cat-minigames.jpg' },
-  { user: 'King***1', game: '25 Coins Deluxe', amount: '₹25,000', image: '/icons/25-coins-santas-jackpot.webp' },
-  { user: 'Lucky***8', game: 'Jungle Riches', amount: '₹18,900', image: '/icons/3-african-drums.webp' },
-  { user: 'Pro***4', game: 'Candy Rush', amount: '₹31,200', image: '/icons/candy-superwin.webp' },
-  { user: 'Star***5', game: 'Sun of Egypt', amount: '₹14,500', image: '/icons/slot.jpg' },
-  { user: 'Aviator***9', game: 'Aviator', amount: '₹53,000', image: '/category/cat-aviator.jpg' },
-]
+const winners = [];
+
+const liveWinnersList = [
+  { user: 'User9630...', game: 'Chicken', amount: '₹3,180', image: '/icons/games/chicken.jpg' },
+  { user: 'User35023...', game: 'Rummy', amount: '₹954.40', image: '/game-art/3-cards-judgement-mac88.webp' },
+  { user: 'User6501...', game: 'Gold Vault', amount: '₹1,000', image: '/icons/games/fortune-gems.jpg' },
+  { user: 'User91912...', game: 'Aviator', amount: '₹2,540', image: '/icons/games/aviator.jpg' },
+  { user: 'User14092...', game: 'Fortune Gems', amount: '₹4,890', image: '/icons/games/fortune-gems.jpg' },
+  { user: 'User7721...', game: 'Candy Super', amount: '₹12,400', image: '/icons/games/pappu.jpg' },
+];
+
+const recentlyPlayedList = [
+  { id: 'recent-aviator', slug: 'spribe_aviator', name: 'AVIATOR', sub: 'Originals', image: '/icons/games/aviator.jpg', players: '928' },
+  { id: 'recent-chicken', slug: 'chicken-road', name: 'CHICKEN', sub: 'Originals', image: '/icons/games/chicken.jpg', players: '1,010' },
+  { id: 'recent-ludo', slug: 'ludo', name: 'LUDO', sub: 'Playing', image: '/icons/games/ludo.jpg', players: '6,949' },
+];
+
+const originalsList = [
+  { id: 'orig-dragontiger', slug: 'dragon-tiger-on', name: 'DRAGON TIGER', sub: 'Originals', image: '/icons/games/dragon-tiger.jpg?v=2', players: '1,294' },
+  { id: 'orig-chicken', slug: 'chicken-road', name: 'CHICKEN', sub: 'Originals', image: '/icons/games/chicken.jpg', players: '1,010' },
+  { id: 'orig-aviator', slug: 'spribe_aviator', name: 'AVIATOR', sub: 'Originals', image: '/icons/games/aviator.jpg', players: '928' },
+  { id: 'orig-dice', slug: '100-super-icy-dice-expanse', name: 'DICE', sub: 'Originals', image: '/icons/games/dice.jpg', players: '826' },
+  { id: 'orig-limbo', slug: 'mole-crash-jdb', name: 'LIMBO', sub: 'Originals', image: '/icons/games/limbo.jpg', players: '566' },
+  { id: 'orig-plinko', slug: 'plinko-jdb', name: 'PLINKO', sub: 'Originals', image: '/icons/games/plinko.jpg', players: '294' },
+];
+
+const casinoList = [
+  { id: 'cas-aviator', slug: 'spribe_aviator', name: 'AVIATOR', sub: 'Casino', image: '/icons/games/aviator.jpg', players: '2,844' },
+  { id: 'cas-garuda', slug: '100-blazing-clover-jili', name: 'FORTUNE GARUDA 1000', sub: 'Casino', image: '/icons/games/garuda.jpg', players: '2,625' },
+  { id: 'cas-chicken2', slug: 'chicken-road', name: 'CHICKEN ROAD 2', sub: 'Casino', image: '/icons/games/chicken-road.jpg', players: '1,487' },
+  { id: 'cas-gems', slug: '10-sparkling-crown-jili', name: 'FORTUNE GEMS 500', sub: 'Casino', image: '/icons/games/fortune-gems.jpg', players: '948' },
+  { id: 'cas-7up', slug: '3-cards-judgement-mac88', name: '7UP 7DOWN', sub: 'Casino', image: '/icons/games/7up-7down.jpg', players: '1,039' },
+  { id: 'cas-pappu', slug: 'candy-superwin', name: 'PAPPU', sub: 'Casino', image: '/icons/games/pappu.jpg', players: '539' },
+];
+
+const freeToPlayList = [
+  { id: 'ftp-ludo', slug: 'ludo', name: 'LUDO', sub: 'Free Play', image: '/icons/games/ludo.jpg', players: '6,964' },
+  { id: 'ftp-ludo2', slug: '100-zombies-dice-endorphina', name: 'LUDO 2DICE', sub: 'Free Play', image: '/icons/games/dice.jpg', players: '1,763' },
+  { id: 'ftp-snakes', slug: '101-candies-evolution-netent-asia', name: 'SNAKES & LADDERS', sub: 'Free Play', image: '/icons/games/snakes-ladders.jpg', players: '2,093' },
+  { id: 'ftp-fruit', slug: '3-power-dragons', name: 'FRUIT DART', sub: 'Free Play', image: '/icons/games/fruit-dart.jpg', players: '925' },
+];
+
+const heroBannersList = [
+  {
+    id: 'banner-originals',
+    title: '99% RTP',
+    titleColor: '#f7b731',
+    subtitle: 'ORIGINALS',
+    tag: 'Fair Play',
+    tagIcon: 'shield',
+    tagBg: 'rgba(46, 75, 140, 0.45)',
+    tagBorder: 'rgba(83, 107, 255, 0.5)',
+    tagColor: '#b5c7ff',
+    image: '/icons/games/dice.jpg',
+    gradient: 'linear-gradient(135deg, #091227 0%, #111d44 55%, #18285c 100%)',
+    actionType: 'fairplay'
+  },
+  {
+    id: 'banner-aviator',
+    title: '100X CASH',
+    titleColor: '#ff4757',
+    subtitle: 'AVIATOR PRO',
+    tag: 'Cashout ✈️',
+    tagIcon: 'zap',
+    tagBg: 'rgba(255, 71, 87, 0.28)',
+    tagBorder: 'rgba(255, 71, 87, 0.65)',
+    tagColor: '#ff929d',
+    image: '/icons/games/aviator.jpg',
+    gradient: 'linear-gradient(135deg, #2a0b14 0%, #4a0d20 55%, #1a050b 100%)',
+    actionType: 'aviator'
+  },
+  {
+    id: 'banner-bonus',
+    title: '100% BONUS',
+    titleColor: '#ffd32a',
+    subtitle: 'UP TO ₹10,000',
+    tag: 'Claim Now ⚡',
+    tagIcon: 'sparkles',
+    tagBg: 'rgba(255, 211, 42, 0.25)',
+    tagBorder: 'rgba(255, 211, 42, 0.6)',
+    tagColor: '#ffeaa7',
+    image: '/welcome-banner.jpg',
+    gradient: 'linear-gradient(135deg, #1f1402 0%, #3e2806 55%, #140c02 100%)',
+    actionType: 'deposit'
+  },
+  {
+    id: 'banner-dragontiger',
+    title: 'DRAGON VS TIGER',
+    titleColor: '#ff4757',
+    subtitle: 'LIVE ARENA',
+    tag: 'Play Live 🐉',
+    tagIcon: 'flame',
+    tagBg: 'rgba(255, 71, 87, 0.25)',
+    tagBorder: 'rgba(255, 71, 87, 0.6)',
+    tagColor: '#ff929d',
+    image: '/icons/games/dragon-tiger.jpg?v=2',
+    gradient: 'linear-gradient(135deg, #2a0b14 0%, #4a0d20 55%, #1a050b 100%)',
+    actionType: 'dragontiger'
+  },
+  {
+    id: 'banner-jackpot',
+    title: '1000X SPINS',
+    titleColor: '#ffa801',
+    subtitle: 'MEGA JACKPOT',
+    tag: 'Spin & Win 🎰',
+    tagIcon: 'trophy',
+    tagBg: 'rgba(255, 168, 1, 0.25)',
+    tagBorder: 'rgba(255, 168, 1, 0.6)',
+    tagColor: '#ffd32a',
+    image: '/icons/games/garuda.jpg',
+    gradient: 'linear-gradient(135deg, #261203 0%, #4a2307 55%, #180c02 100%)',
+    actionType: 'slots'
+  }
+];
 
 type PromoTab = 'Event' | 'Mission' | 'VIP' | 'Rebate' | 'Unclaimed'
 type PromoCategory = 'All' | 'Agent' | 'Slot' | 'Mini Games' | 'Cards' | 'Fishing'
@@ -146,6 +251,7 @@ function App() {
   const [providerList, setProviderList] = useState<string[]>([]);
   const [providerGameFilter, setProviderGameFilter] = useState<'All' | 'Slots' | 'Aviator' | 'Dragon Tiger' | 'Triple 7' | 'Suspended'>('All');
 
+  const [mainNavTab, setMainNavTab] = useState<'explore' | 'games' | 'fantasy' | 'casino' | 'sports'>('explore');
   const [user, setUser] = useState<Account | null>(null);
   const updateWalletBalance = useCallback((balance: number) => {
     setUser(current => current && current.balance !== balance ? { ...current, balance } : current);
@@ -172,13 +278,45 @@ function App() {
   const [supportWhatsApp, setSupportWhatsApp] = useState<string | null>(null);
   const [promoDismissed, setPromoDismissed] = useState(false);
   const [heroSlide, setHeroSlide] = useState(0);
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setHeroSlide((prev) => (prev + 1) % 4);
-    }, 4500);
+      setHeroSlide((prev) => (prev + 1) % heroBannersList.length);
+    }, 3500);
     return () => clearInterval(timer);
   }, []);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (diff > 40) {
+      setHeroSlide((prev) => (prev + 1) % heroBannersList.length);
+    } else if (diff < -40) {
+      setHeroSlide((prev) => (prev - 1 + heroBannersList.length) % heroBannersList.length);
+    }
+    touchStartX.current = null;
+  };
+
+  const handleBannerAction = (actionType: string) => {
+    if (actionType === 'fairplay') {
+      setView('fairplay');
+    } else if (actionType === 'deposit') {
+      openDeposit();
+    } else if (actionType === 'dragontiger' || actionType === 'mines') {
+      const gm = games.find(g => g.slug === 'dragon-tiger-on' || g.slug === 'dragon-tiger-joker' || g.slug === 'dragon-tiger-2-mac88' || g.name.toLowerCase().includes('dragon')) || games[0];
+      if (gm) launch(gm);
+    } else if (actionType === 'aviator') {
+      const av = games.find(g => g.name.toLowerCase().includes('aviator')) || games[0];
+      if (av) launch(av);
+    } else if (actionType === 'slots') {
+      setActiveCategory('slots');
+    }
+  };
   
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -276,9 +414,7 @@ function App() {
   // Automated 10-minute server API heartbeat ping (keeps server alive 24/7)
   useEffect(() => {
     const pingServer = () => {
-      const baseUrl = API_BASE.replace(/\/api\/?$/, '');
-      fetch(`${baseUrl}/health`).catch(() => {});
-      fetch(`${baseUrl}/api/ping`).catch(() => {});
+      fetch(`${API_BASE}/ping`).catch(() => {});
     };
     pingServer(); // Immediate ping on initial load
     const pingInterval = window.setInterval(pingServer, 10 * 60 * 1000); // Every 10 minutes (600,000 ms)
@@ -427,7 +563,6 @@ function App() {
     { id: 'slots', label: 'Slots', image: '/category/cat-slots.jpg' },
     { id: 'minigames', label: 'Mini Games', image: '/category/cat-minigames.jpg' },
     { id: 'aviator', label: 'Aviator', image: '/category/cat-aviator.jpg' },
-    { id: 'dragon-tiger', label: 'Dragon Tiger', image: '/icons/dragon.jpg' },
     { id: 'cards', label: 'Cards', image: '/category/cat-cards.jpg' },
     { id: 'live', label: 'Live Casino', image: '/category/cat-live.jpg' },
     { id: 'fishing', label: 'Fish', image: '/category/cat-fish.jpg' },
@@ -466,54 +601,177 @@ function App() {
 
   const toggleFavorite = (id: string) => setFavorites((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
 
-  const renderGameCard = (game: Game) => {
+    const renderGameCard = (game: Game) => {
     const isSupported = !game.supportedCurrencies || game.supportedCurrencies.includes('INR');
     const isSuspended = isSuspendedGame(game);
     const logoSrc = getGameLogo(game);
-    const isFav = favorites.includes(game.id);
+    const hash = (game.name + game.id).split('').reduce((acc, c) => (acc * 33 + c.charCodeAt(0)) >>> 0, 5381);
+    const players = (350 + (hash % 6200)).toLocaleString('en-IN');
 
     return (
       <article
-        className={`malt-game-card ${isSuspended ? 'disabled' : ''}`}
+        className="come-card"
         key={game.id}
-        onClick={() => isSupported && !isSuspended ? launch(game) : undefined}
-        style={{ opacity: isSupported && !isSuspended ? 1 : 0.55, cursor: isSuspended ? 'not-allowed' : 'pointer' }}
+        onClick={() => {
+          if (isSupported && !isSuspended) launch(game);
+        }}
       >
-        <div className="malt-card-thumb-wrap">
+        <div className="come-card-thumb-wrap">
           <img 
             src={logoSrc} 
             alt={game.name} 
             loading="lazy"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              if (target.src.includes('slot-new.png')) return;
-              target.src = '/category/slot-new.png';
+              if (target.src.includes('slot_main.jpg')) return;
+              target.src = '/icons/slot_main.jpg';
             }} 
           />
-          {(isSuspended || !isSupported) && (
-            <div className="malt-card-badge">
-              {isSuspended ? 'COMING SOON' : 'UNSUPPORTED'}
-            </div>
-          )}
-          <button
-            type="button"
-            className={`malt-card-star ${isFav ? 'active' : ''}`}
-            onClick={(event) => {
-              event.stopPropagation();
-              if (!user) {
-                setAuthError('');
-                setModal('register');
-                return;
-              }
-              toggleFavorite(game.id);
-            }}
-            aria-label={`${isFav ? 'Remove' : 'Add'} ${game.name} from favorites`}
-          >
-            <Star size={13} fill={isFav ? '#f4c35a' : 'none'} color={isFav ? '#f4c35a' : '#fff'} />
-          </button>
         </div>
-        <div className="malt-card-title" title={game.name}>
+        <div className="come-card-title" title={game.name}>
           {game.name}
+        </div>
+        <div className="come-card-sub">
+          {game.provider || 'Originals'}
+        </div>
+        <div className="come-live-players">
+          <span className="come-live-dot">●</span>
+          <span>{players} playing</span>
+        </div>
+      </article>
+    );
+  };
+
+  const renderComeCard = (g: {
+    id: string;
+    slug?: string;
+    name: string;
+    sub: string;
+    image: string;
+    players: string;
+  }) => {
+    return (
+      <article
+        key={g.id}
+        className="come-card"
+        onClick={() => {
+          let matched = games.find(gm => gm.slug === g.slug);
+          if (!matched && g.id) {
+            matched = games.find(gm => gm.id === g.id);
+          }
+          if (!matched) {
+            matched = games.find(gm => gm.name.toLowerCase() === g.name.toLowerCase());
+          }
+          if (!matched) {
+            if (g.name.toLowerCase().includes('aviator')) {
+              matched = games.find(gm => gm.slug === 'spribe_aviator') || games.find(gm => gm.name.toLowerCase().includes('aviator'));
+            } else if (g.name.toLowerCase().includes('chicken')) {
+              matched = games.find(gm => gm.slug === 'chicken-road') || games.find(gm => gm.gameUid === '2126c5c458316ba1f2df65b387b60408') || games.find(gm => gm.slug === 'chicken-hot-run-expanse');
+            } else if (g.name.toLowerCase().includes('dragon') || g.name.toLowerCase().includes('tiger')) {
+              matched = games.find(gm => gm.slug === 'dragon-tiger-on' || gm.slug === 'dragon-tiger-joker' || gm.slug === 'dragon-tiger-2-mac88') || games.find(gm => gm.name.toLowerCase().includes('dragon'));
+            } else if (g.name.toLowerCase().includes('ludo') || (g.slug && g.slug.includes('ludo'))) {
+              matched = games.find(gm => gm.slug === 'ludo') || games.find(gm => gm.gameUid === '98bcfab0b0808eb3063b559049afd0e9') || games.find(gm => gm.name.toLowerCase().includes('ludo'));
+            } else if (g.name.toLowerCase().includes('mines')) {
+              matched = games.find(gm => gm.slug === 'mines-jdb');
+            }
+          }
+          if (matched) {
+            launch(matched);
+          } else {
+            if (g.name.toLowerCase().includes('ludo') || (g.slug && g.slug.includes('ludo'))) {
+              launch({
+                id: 'ludo',
+                slug: 'ludo',
+                gameUid: '98bcfab0b0808eb3063b559049afd0e9',
+                providerId: '98bcfab0b0808eb3063b559049afd0e9',
+                name: 'Ludo',
+                provider: 'GameCloud',
+                category: 'ARCADE',
+                image: '/icons/games/ludo.jpg',
+                accent: '#ffaa00',
+                supportedCurrencies: ['INR'],
+                status: 'ACTIVE',
+                isActive: true
+              } as any);
+            } else if (g.name.toLowerCase().includes('chicken')) {
+              launch({
+                id: 'chicken-road',
+                slug: 'chicken-road',
+                gameUid: '2126c5c458316ba1f2df65b387b60408',
+                providerId: '2126c5c458316ba1f2df65b387b60408',
+                name: 'Chicken Road',
+                provider: 'GameCloud',
+                category: 'CRASH',
+                image: '/icons/games/chicken.jpg',
+                accent: '#ffaa00',
+                supportedCurrencies: ['INR'],
+                status: 'ACTIVE',
+                isActive: true
+              } as any);
+            } else if (g.name.toLowerCase().includes('dragon') || g.name.toLowerCase().includes('tiger')) {
+              launch({
+                id: 'dragon-tiger-on',
+                slug: 'dragon-tiger-on',
+                gameUid: 'dragon-tiger-on',
+                providerId: 'dragon-tiger-on',
+                name: 'Dragon Tiger',
+                provider: 'GameCloud',
+                category: 'TABLE',
+                image: '/icons/games/dragon-tiger.jpg',
+                accent: '#ffaa00',
+                supportedCurrencies: ['INR'],
+                status: 'ACTIVE',
+                isActive: true
+              } as any);
+            } else if (g.name.toLowerCase().includes('aviator')) {
+              launch({
+                id: 'spribe_aviator',
+                slug: 'spribe_aviator',
+                gameUid: 'spribe_aviator',
+                providerId: 'spribe_aviator',
+                name: 'Aviator',
+                provider: 'GameCloud',
+                category: 'CRASH',
+                image: '/icons/games/aviator.jpg',
+                accent: '#ffaa00',
+                supportedCurrencies: ['INR'],
+                status: 'ACTIVE',
+                isActive: true
+              } as any);
+            } else {
+              launch({
+                id: g.id || g.slug,
+                slug: g.slug,
+                gameUid: g.slug,
+                providerId: g.slug,
+                name: g.name,
+                provider: 'GameCloud',
+                category: 'ARCADE',
+                image: g.image,
+                accent: '#ffaa00',
+                supportedCurrencies: ['INR'],
+                status: 'ACTIVE',
+                isActive: true
+              } as any);
+            }
+          }
+        }}
+      >
+        <div className="come-card-thumb-wrap">
+          <img
+            src={g.image}
+            alt={g.name}
+            loading="lazy"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/icons/slot_main.jpg';
+            }}
+          />
+        </div>
+        <div className="come-card-title">{g.name}</div>
+        <div className="come-card-sub">{g.sub}</div>
+        <div className="come-live-players">
+          <span className="come-live-dot">●</span>
+          <span>{g.players} playing</span>
         </div>
       </article>
     );
@@ -554,8 +812,8 @@ function App() {
     }
     
     try {
-      const session = await liveGameProvider.launchGame(game.id)
-      if (session.sessionUrl) {
+      const session = await liveGameProvider.launchGame(game);
+      if (session?.sessionUrl) {
         window.location.href = session.sessionUrl; // Use full page redirect as it's an external provider game
       }
     } catch (error) {
@@ -668,7 +926,7 @@ function App() {
           </div>
         )}
 
-        <header className={`malt-header ${!activeProvider && !promoDismissed ? 'has-promo' : ''}`}>
+                <header className="come-header">
           {activeProvider ? (
             <div style={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -679,11 +937,8 @@ function App() {
                 >
                   <ChevronRight style={{ transform: 'rotate(180deg)' }} />
                 </button>
-                <div className="malt-brand-group" onClick={() => { setActiveProvider(null); setView('home'); }}>
-                  <div className="malt-brand-logo-box">
-                    <img src="/logo.png" alt="Logo" />
-                  </div>
-                  <span className="malt-brand-name">MALTIPLAYX</span>
+                <div className="come-logo" onClick={() => { setActiveProvider(null); setView('home'); }}>
+                  <span>Come</span>
                 </div>
               </div>
               <button
@@ -695,69 +950,55 @@ function App() {
             </div>
           ) : (
             <>
-              <div className="malt-brand-group" onClick={() => setView('home')}>
-                <div className="malt-brand-logo-box">
-                  <img src="/logo.png" alt="Maltiplayx Logo" />
-                </div>
-                <span className="malt-brand-name">MALTIPLAYX</span>
+              <div className="come-logo" onClick={() => { setMainNavTab('explore'); setView('home'); }}>
+                <span>Come</span>
               </div>
 
-              <div className="malt-header-right">
+              <div className="come-header-right">
+                <div
+                  className="come-flag-pill"
+                  onClick={openDeposit}
+                  title="Click to deposit funds"
+                >
+                  <span style={{ fontSize: '15px' }}>🇮🇳</span>
+                  <span>{user ? Number(user.balance).toFixed(1) : '0.3'}</span>
+                  <span style={{ fontSize: '10px', color: '#8e96b5' }}>▾</span>
+                </div>
+
                 <button
-                  className="malt-icon-btn"
+                  className="come-wallet-btn"
+                  onClick={openDeposit}
+                  title="Add Funds / Deposit"
+                  aria-label="Deposit"
+                >
+                  <WalletCards size={17} />
+                </button>
+
+                <button
+                  className="come-icon-btn"
                   onClick={() => alert('No new notifications')}
                   aria-label="Notifications"
                 >
-                  <Bell size={19} />
-                  <span className="malt-notif-dot" />
+                  <Bell size={18} />
+                  <span className="badge-dot" />
                 </button>
 
-                <button
-                  className="malt-icon-btn"
-                  onClick={() => {
-                    const input = document.getElementById('game-search');
-                    if (input) {
-                      input.focus();
-                      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                  }}
-                  aria-label="Search"
+                <div
+                  className="come-avatar"
+                  onClick={() => setView('profile')}
+                  title="Open Profile"
                 >
-                  <Search size={19} />
-                </button>
-
-                {user ? (
-                  <>
-                    <div
-                      className="malt-wallet-pill"
-                      onClick={openDeposit}
-                      title="Click to deposit funds"
-                    >
-                      <WalletCards size={14} color="#8e9bc7" />
-                      <span className="malt-wallet-amount">
-                        ₹{Number(user.balance).toLocaleString('en-IN')}
-                      </span>
-                      <span className="malt-wallet-plus">+</span>
-                    </div>
-
-                    <div
-                      className="malt-avatar-box"
-                      onClick={() => setView('profile')}
-                      title="Open Profile"
-                    >
-                      <img
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id || 'User'}&backgroundColor=f4c35a`}
-                        alt="Avatar"
-                      />
-                    </div>
-                  </>
-                ) : null}
+                  <img
+                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'User'}&backgroundColor=f4c35a`}
+                    alt="Avatar"
+                  />
+                </div>
               </div>
             </>
           )}
 
           {showCategoryDropdown && activeProvider && (
-            <div style={{ position: 'absolute', top: '58px', left: 0, right: 0, background: '#0a0f2c', zIndex: 10, padding: '16px 12px', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px', borderBottom: '1px solid rgba(143, 157, 215, 0.2)', boxShadow: '0 15px 30px rgba(0,0,0,0.6)' }}>
+            <div style={{ position: 'absolute', top: '54px', left: 0, right: 0, background: '#0a0f2c', zIndex: 10, padding: '16px 12px', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px', borderBottom: '1px solid rgba(143, 157, 215, 0.2)', boxShadow: '0 15px 30px rgba(0,0,0,0.6)' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
                 {[...categories, { id: 'recent', label: 'Recent', icon: <span style={{fontSize:'14px'}}>🕒</span> }, { id: 'favorites', label: 'Favorite', icon: <span style={{fontSize:'14px', color: '#f4c35a'}}>⭐</span> }].map(cat => {
                   const isActive = activeCategory === cat.id;
@@ -788,6 +1029,35 @@ function App() {
           )}
         </header>
 
+        {/* Top 5 Icon Navigation Tabs matching screenshot */}
+        {!activeProvider && (
+          <nav className="come-top-nav">
+            {[
+              { id: 'explore', label: 'Explore', icon: '🔥' },
+              { id: 'games', label: 'Games', icon: '🎮' },
+              { id: 'fantasy', label: 'Fantasy', icon: '🏆' },
+              { id: 'casino', label: 'Casino', icon: '🎰' },
+              { id: 'sports', label: 'Sports', icon: '⚽' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                className={`come-nav-tab ${mainNavTab === tab.id ? 'active' : ''}`}
+                onClick={() => {
+                  setMainNavTab(tab.id as any);
+                  if (tab.id === 'casino') setActiveCategory('slots');
+                  else if (tab.id === 'sports') setActiveCategory('sports');
+                  else if (tab.id === 'games') setActiveCategory('minigames');
+                  else if (tab.id === 'fantasy') setActiveCategory('aviator');
+                  else setActiveCategory('hot');
+                }}
+              >
+                <span className="tab-icon">{tab.icon}</span>
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </nav>
+        )}
+
         {view === 'promos'
           ? <InvitePromoPage user={user} onHome={() => setView('home')} onLogin={() => setModal('login')} onOpenDeposit={openDeposit} />
           : view === 'vip'
@@ -798,7 +1068,7 @@ function App() {
                 ? <FairPlayPage onHome={() => setView('home')} />
                 : view === 'support'
                   ? <SupportPage whatsappNumber={supportWhatsApp} onHome={() => setView('home')} />
-                  : <main style={{ paddingBottom: '90px' }}>
+                                    : <main style={{ paddingBottom: '90px' }}>
           {!activeProvider && (
             <>
               {/* Guest Auth Bar on Page */}
@@ -827,159 +1097,164 @@ function App() {
                 </div>
               )}
 
-              {/* 3. Hero Promotional Banner */}
-              <section className="malt-hero-section">
-                {(() => {
-                  const heroSlides = [
-                    {
-                      top: 'WELCOME',
-                      bottom: 'BONUS',
-                      subtitle: '100% Match bonus up to ₹10,000 on 1st deposit',
-                      image: '/welcome-banner.jpg',
-                      cta: 'CLAIM NOW ➔',
-                      action: openDeposit,
-                    },
-                    {
-                      top: 'AVIATOR',
-                      bottom: 'MULTIPLIER',
-                      subtitle: 'Cash out before the plane flies away! Up to 100x',
-                      image: '/category/cat-aviator.jpg',
-                      cta: 'PLAY NOW ➔',
-                      action: () => {
-                        const aviatorGame = games.find(g => g.name.toLowerCase().includes('aviator'));
-                        if (aviatorGame) launch(aviatorGame);
-                        else setActiveCategory('aviator');
-                      },
-                    },
-                    {
-                      top: 'VIP CLUB',
-                      bottom: 'REWARDS',
-                      subtitle: 'Unlock weekly cashbacks, perks & private VIP manager',
-                      image: '/category/cat-minigames.jpg',
-                      cta: 'EXPLORE VIP ➔',
-                      action: () => setView('vip'),
-                    },
-                    {
-                      top: 'MEGA',
-                      bottom: 'JACKPOTS',
-                      subtitle: 'Spin premium slots & win life-changing cash jackpots',
-                      image: '/category/cat-slots.jpg',
-                      cta: 'SPIN NOW ➔',
-                      action: () => setActiveCategory('slots'),
-                    },
-                  ];
-                  const currentSlide = heroSlides[heroSlide] || heroSlides[0];
-
-                  return (
+              {mainNavTab === 'explore' && !search ? (
+                <>
+                  {/* Hero Promotional Auto-sliding Carousel Banner */}
+                  <div
+                    className="come-carousel-wrapper"
+                    onTouchStart={handleTouchStart}
+                    onTouchEnd={handleTouchEnd}
+                  >
                     <div
-                      className="malt-hero-card"
-                      style={{ backgroundImage: `url(${currentSlide.image})` }}
-                      onClick={currentSlide.action}
+                      className="come-carousel-track"
+                      style={{ transform: `translateX(-${heroSlide * 100}%)` }}
                     >
-                      <div className="malt-hero-overlay">
-                        <div className="malt-hero-title-group">
-                          <div className="malt-hero-title-top">{currentSlide.top}</div>
-                          <div className="malt-hero-title-bottom">{currentSlide.bottom}</div>
-                        </div>
-                        <p className="malt-hero-subtitle">{currentSlide.subtitle}</p>
-                        <button
-                          type="button"
-                          className="malt-hero-cta-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            currentSlide.action();
-                          }}
+                      {heroBannersList.map((b) => (
+                        <div
+                          key={b.id}
+                          className="come-carousel-slide"
+                          style={{ background: b.gradient }}
+                          onClick={() => handleBannerAction(b.actionType)}
                         >
-                          {currentSlide.cta}
-                        </button>
-                      </div>
-                      <div className="malt-hero-dots">
-                        {heroSlides.map((_, i) => (
-                          <span
-                            key={i}
-                            className={`malt-hero-dot ${heroSlide === i ? 'active' : ''}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setHeroSlide(i);
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()}
-              </section>
-
-              {/* 4. Live Wins Section */}
-              <section className="malt-live-section">
-                <div className="malt-live-container">
-                  <div className="malt-live-tag">
-                    <span>🔥</span>
-                    <span>Live Wins</span>
-                  </div>
-                  <div className="malt-live-ticker-wrap">
-                    <div className="malt-live-ticker-track">
-                      {[...winners, ...winners].map((winner, idx) => (
-                        <div key={idx} className="malt-live-card">
-                          <img
-                            src={winner.image}
-                            alt={winner.game}
-                            className="malt-live-thumb"
-                            onError={(e) => { (e.target as HTMLImageElement).src = '/category/cat-slots.jpg'; }}
-                          />
-                          <div className="malt-live-info">
-                            <span className="malt-live-user">{winner.user}</span>
-                            <span className="malt-live-win">
-                              won <strong>{winner.amount}</strong>
-                            </span>
+                          <div className="come-hero-content">
+                            <div className="come-hero-rtp" style={{ color: b.titleColor }}>
+                              {b.title}
+                            </div>
+                            <div className="come-hero-sub">
+                              {b.subtitle}
+                            </div>
+                            <div
+                              className="come-fairplay-btn"
+                              style={{
+                                background: b.tagBg,
+                                borderColor: b.tagBorder,
+                                color: b.tagColor
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleBannerAction(b.actionType);
+                              }}
+                            >
+                              {b.tag}
+                              {b.tagIcon === 'shield' && <ShieldCheck size={13} />}
+                              {b.tagIcon === 'zap' && <Zap size={13} />}
+                              {b.tagIcon === 'sparkles' && <Sparkles size={13} />}
+                              {b.tagIcon === 'trophy' && <Trophy size={13} />}
+                            </div>
+                          </div>
+                          <div className="come-hero-art">
+                            <img
+                              src={b.image}
+                              alt={b.subtitle}
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/welcome-banner.jpg';
+                              }}
+                            />
                           </div>
                         </div>
                       ))}
                     </div>
+                    {/* Active Dots indicator */}
+                    <div className="come-carousel-dots">
+                      {heroBannersList.map((_, idx) => (
+                        <span
+                          key={idx}
+                          className={`come-carousel-dot ${heroSlide === idx ? 'active' : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setHeroSlide(idx);
+                          }}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </section>
 
-              {/* 5. Quick Access Cards */}
-              <section className="malt-quick-grid">
-                <button className="malt-quick-card" onClick={() => setView('promos')}>
-                  <div className="malt-quick-card-left">
-                    <span className="malt-quick-icon gold"><Gift size={16} /></span>
-                    <span className="label">Promos</span>
+                  {/* Live Wins Section matching Screenshot */}
+                  <div className="come-live-section">
+                    <div className="come-section-header">
+                      <h3 className="come-sec-title">
+                        <span className="initial-yellow">L</span>ive wins
+                      </h3>
+                      <span className="come-all-bets" onClick={() => setMainNavTab('casino')}>All bets</span>
+                    </div>
+                    <div className="come-live-scroll">
+                      {liveWinnersList.map((w, idx) => (
+                        <div key={idx} className="come-win-card" onClick={() => {
+                          const found = games.find(g => g.name.toLowerCase().includes(w.game.toLowerCase()));
+                          if (found) launch(found);
+                        }}>
+                          <img src={w.image} alt={w.game} className="come-win-thumb" onError={(e) => { (e.target as HTMLImageElement).src = '/category/slot-new.png'; }} />
+                          <div className="come-win-user">{w.user}</div>
+                          <div className="come-win-amt">{w.amount}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <ChevronRight size={13} className="malt-quick-chevron" />
-                </button>
-                <button className="malt-quick-card" onClick={() => setView('vip')}>
-                  <div className="malt-quick-card-left">
-                    <span className="malt-quick-icon purple"><Trophy size={16} /></span>
-                    <span className="label">VIP Club</span>
-                  </div>
-                  <ChevronRight size={13} className="malt-quick-chevron" />
-                </button>
-                <button className="malt-quick-card" onClick={openSupport}>
-                  <div className="malt-quick-card-left">
-                    <span className="malt-quick-icon blue"><Headphones size={16} /></span>
-                    <span className="label">Support</span>
-                  </div>
-                  <ChevronRight size={13} className="malt-quick-chevron" />
-                </button>
-                <button className="malt-quick-card" onClick={() => setView('fairplay')}>
-                  <div className="malt-quick-card-left">
-                    <span className="malt-quick-icon green"><ShieldCheck size={16} /></span>
-                    <span className="label">Fair Play</span>
-                  </div>
-                  <ChevronRight size={13} className="malt-quick-chevron" />
-                </button>
-              </section>
 
-              {/* 6. Game Search Bar */}
-              <div className="malt-search-box">
+                  {/* Recently Played matching Screenshot */}
+                  <div style={{ padding: '0 14px' }}>
+                    <div className="come-section-header">
+                      <h3 className="come-sec-title">
+                        <span className="initial-green">R</span>ecently Played
+                      </h3>
+                    </div>
+                  </div>
+                  <div className="come-game-grid">
+                    {recentlyPlayedList.map(renderComeCard)}
+                  </div>
+
+                  {/* Originals - 99%RTP (8) matching Screenshot */}
+                  <div style={{ padding: '0 14px', marginTop: '10px' }}>
+                    <div className="come-section-header">
+                      <h3 className="come-sec-title">
+                        <span className="initial-yellow">O</span>riginals - 99%RTP (8)
+                      </h3>
+                    </div>
+                  </div>
+                  <div className="come-game-grid">
+                    {originalsList.map(renderComeCard)}
+                  </div>
+                  <button className="come-load-more" onClick={() => setMainNavTab('games')}>
+                    Load More ▾
+                  </button>
+
+                  {/* Casino (51) matching Screenshot */}
+                  <div style={{ padding: '0 14px', marginTop: '10px' }}>
+                    <div className="come-section-header">
+                      <h3 className="come-sec-title">
+                        <span className="initial-yellow">C</span>asino (51)
+                      </h3>
+                    </div>
+                  </div>
+                  <div className="come-game-grid">
+                    {casinoList.map(renderComeCard)}
+                  </div>
+                  <button className="come-load-more" onClick={() => setMainNavTab('casino')}>
+                    Load More ▾
+                  </button>
+
+                  {/* Free To Play (5) matching Screenshot */}
+                  <div style={{ padding: '0 14px', marginTop: '10px' }}>
+                    <div className="come-section-header">
+                      <h3 className="come-sec-title">
+                        <span className="initial-yellow">F</span>ree To Play ({freeToPlayList.length})
+                      </h3>
+                    </div>
+                  </div>
+                  <div className="come-game-grid">
+                    {freeToPlayList.map(renderComeCard)}
+                  </div>
+                </>
+              ) : null}
+
+              {/* Game Search Bar */}
+              <div className="malt-search-box" style={{ margin: '14px 14px 10px' }}>
                 <Search size={18} color="#6977a4" />
                 <input
                   id="game-search"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search games..."
+                  placeholder="Search working games..."
                 />
                 {search && (
                   <button className="malt-clear-search" onClick={() => setSearch('')}>
@@ -987,163 +1262,103 @@ function App() {
                   </button>
                 )}
               </div>
-
-              {/* 7. Category Navigation Cards (Side-Sliding) */}
-              <div className="malt-categories-row" aria-label="Game categories">
-                {homeCategoryOptions.map(option => (
-                  <button
-                    type="button"
-                    key={option.id}
-                    className={`malt-cat-card ${activeCategory === option.id ? 'active' : ''}`}
-                    onClick={() => {
-                      setActiveCategory(option.id);
-                    }}
-                    aria-pressed={activeCategory === option.id}
-                  >
-                    <div className="malt-cat-img-box">
-                      <img
-                        src={option.image}
-                        alt={option.label}
-                        onError={(e) => { (e.target as HTMLImageElement).src = '/category/slot-new.png'; }}
-                      />
-                    </div>
-                    <span>{option.label}</span>
-                  </button>
-                ))}
-              </div>
             </>
           )}
 
-          {/* 8 & 9. Games Catalog & Grid */}
-          <section style={{ marginTop: activeProvider ? '10px' : '0' }}>
-            {activeProvider ? (
-              <div style={{ display: 'flex', gap: '12px', padding: '0 14px' }}>
-                <div ref={sidebarRef} className="category-sidebar" style={{ display: 'flex', flexDirection: 'column', width: '90px', flexShrink: 0, gap: '6px', maxHeight: 'calc(100vh - 140px)', overflowY: 'auto', paddingRight: '4px', position: 'sticky', top: '70px', zIndex: 5 }}>
-                  {dynamicProviders.map(provider => (
-                    <button
-                      id={`provider-btn-${provider}`}
-                      key={provider}
-                      onClick={() => {
-                        setActiveProvider(provider);
-                        setProviderGameFilter('All');
-                        setProviderTab('All');
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 6px', background: activeProvider === provider ? 'rgba(255,255,255,0.08)' : 'transparent', border: activeProvider === provider ? '1px solid rgba(244,195,90,0.5)' : '1px solid transparent', borderRadius: '8px', color: activeProvider === provider ? '#f4c35a' : '#ccd6f6', cursor: 'pointer', textAlign: 'left', fontSize: '11px', fontWeight: 'bold' }}
-                    >
-                      {renderProviderLogo(provider)}
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{provider}</span>
-                    </button>
-                  ))}
-                </div>
-
-                <div style={{ flexGrow: 1, minWidth: 0 }}>
-                  <div className="provider-category-filters" style={{ margin: '0 0 12px' }}>
-                    {(['All', 'Slots', 'Aviator', 'Dragon Tiger', 'Triple 7', 'Suspended'] as const).map(filter => (
+          {/* Catalog & Games Display */}
+          {(mainNavTab !== 'explore' || search || activeProvider) && (
+            <section style={{ marginTop: activeProvider ? '10px' : '0' }}>
+              {activeProvider ? (
+                <div style={{ display: 'flex', gap: '12px', padding: '0 14px' }}>
+                  <div ref={sidebarRef} className="category-sidebar" style={{ display: 'flex', flexDirection: 'column', width: '90px', flexShrink: 0, gap: '6px', maxHeight: 'calc(100vh - 140px)', overflowY: 'auto', paddingRight: '4px', position: 'sticky', top: '70px', zIndex: 5 }}>
+                    {dynamicProviders.map(provider => (
                       <button
-                        key={filter}
-                        type="button"
-                        className={providerGameFilter === filter ? 'active' : ''}
+                        id={`provider-btn-${provider}`}
+                        key={provider}
                         onClick={() => {
-                          setProviderGameFilter(filter);
+                          setActiveProvider(provider);
+                          setProviderGameFilter('All');
                           setProviderTab('All');
-                          setSearch('');
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 6px', background: activeProvider === provider ? 'rgba(255,255,255,0.08)' : 'transparent', border: activeProvider === provider ? '1px solid rgba(244,195,90,0.5)' : '1px solid transparent', borderRadius: '8px', color: activeProvider === provider ? '#f4c35a' : '#ccd6f6', cursor: 'pointer', textAlign: 'left', fontSize: '11px', fontWeight: 'bold' }}
                       >
-                        {filter}
+                        {renderProviderLogo(provider)}
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{provider}</span>
                       </button>
                     ))}
                   </div>
 
-                  <div className="malt-game-grid" style={{ padding: 0 }}>
-                    {providerGames.length ? providerGames.map(renderGameCard) : (
-                      <div className="empty-state" style={{ gridColumn: '1 / -1', padding: '40px 0', textAlign: 'center' }}>
-                        <b>No games in this list</b>
-                      </div>
-                    )}
+                  <div style={{ flexGrow: 1, minWidth: 0 }}>
+                    <div className="provider-category-filters" style={{ margin: '0 0 12px' }}>
+                      {(['All', 'Slots', 'Aviator', 'Dragon Tiger', 'Triple 7', 'Suspended'] as const).map(filter => (
+                        <button
+                          key={filter}
+                          type="button"
+                          className={providerGameFilter === filter ? 'active' : ''}
+                          onClick={() => {
+                            setProviderGameFilter(filter);
+                            setProviderTab('All');
+                            setSearch('');
+                          }}
+                        >
+                          {filter}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="come-game-grid" style={{ padding: 0 }}>
+                      {providerGames.length ? providerGames.map(renderGameCard) : (
+                        <div className="empty-state" style={{ gridColumn: '1 / -1', padding: '40px 0', textAlign: 'center' }}>
+                          <b>No games in this list</b>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div>
-                {(() => {
-                  const selectedCategory = homeCategoryOptions.find(option => option.id === activeCategory) ?? homeCategoryOptions[0];
-                  const selectedGames = selectedCategory ? getHomeCategoryGames(selectedCategory.id) : [];
-                  const categoryTitle = selectedCategory?.label || 'Slots';
+              ) : (
+                <div>
+                  <div className="malt-catalog-header" style={{ padding: '0 14px 10px' }}>
+                    <div className="malt-catalog-title-group">
+                      <h2 className="malt-catalog-title">
+                        {search ? `SEARCH: "${search.toUpperCase()}"` : (mainNavTab.toUpperCase() + ' GAMES')}
+                      </h2>
+                      <span className="malt-game-count">{filteredGames.length} GAMES</span>
+                    </div>
+                  </div>
 
-                  return (
-                    <>
-                      <div className="malt-catalog-header">
-                        <div className="malt-catalog-title-group">
-                          <h2 className="malt-catalog-title">{categoryTitle.toUpperCase()}</h2>
-                          <span className="malt-game-count">{selectedGames.length} GAMES</span>
+                  {loading ? (
+                    <div className="come-game-grid">
+                      {[1, 2, 3, 4, 5, 6].map((item) => (
+                        <div key={item} className="come-card">
+                          <div className="come-card-thumb-wrap skeleton" />
                         </div>
-                        <div className="malt-currency-toggle">
-                          <button
-                            className={`malt-curr-btn ${inrFilter ? 'active' : ''}`}
-                            onClick={() => setInrFilter(true)}
-                          >
-                            INR
-                          </button>
-                          <button
-                            className={`malt-curr-btn ${!inrFilter ? 'active' : ''}`}
-                            onClick={() => setInrFilter(false)}
-                          >
-                            ALL
-                          </button>
-                        </div>
-                      </div>
+                      ))}
+                    </div>
+                  ) : filteredGames.length ? (
+                    <div className="come-game-grid">
+                      {filteredGames.map(renderGameCard)}
+                    </div>
+                  ) : (
+                    <div className="empty-state" style={{ textAlign: 'center', padding: '40px 0', color: '#8898c6' }}>
+                      <Search size={25} style={{ margin: '0 auto 10px' }} />
+                      <b>No games found</b>
+                    </div>
+                  )}
 
-                      {loading ? (
-                        <div className="malt-game-grid">
-                          {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-                            <div
-                              key={item}
-                              className="malt-game-card"
-                            >
-                              <div className="malt-card-thumb-wrap skeleton" />
-                              <div style={{ height: '12px', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', marginTop: '6px' }} />
-                            </div>
-                          ))}
+                  {loadingMore && (
+                    <div className="come-game-grid" style={{ marginTop: '10px' }}>
+                      {[1, 2, 3].map((item) => (
+                        <div key={`skel-${item}`} className="come-card">
+                          <div className="come-card-thumb-wrap skeleton" />
                         </div>
-                      ) : search ? (
-                        filteredGames.length ? (
-                          <div className="malt-game-grid">
-                            {filteredGames.map(renderGameCard)}
-                          </div>
-                        ) : (
-                          <div className="empty-state" style={{ textAlign: 'center', padding: '40px 0', color: '#8898c6' }}>
-                            <Search size={25} style={{ margin: '0 auto 10px' }} />
-                            <b>No games found</b>
-                          </div>
-                        )
-                      ) : (
-                        <div className="malt-game-grid">
-                          {selectedGames.length ? (
-                            selectedGames.map(renderGameCard)
-                          ) : (
-                            <div className="empty-state" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px 0' }}>
-                              <b>No active games in this category</b>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {loadingMore && (
-                        <div className="malt-game-grid" style={{ marginTop: '10px' }}>
-                          {[1, 2, 3, 4].map((item) => (
-                            <div key={`skel-${item}`} className="malt-game-card">
-                              <div className="malt-card-thumb-wrap skeleton" />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
-              </div>
-            )}
-          </section>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </section>
+          )}
         </main>}
 
         {/* 10. Floating Support Button */}

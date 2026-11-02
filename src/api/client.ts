@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://casino-baac-env.eba-9kvg9eap.ap-southeast-2.elasticbeanstalk.com/api';
+const RAW_API_URL = import.meta.env.VITE_API_URL || 'http://casino-baac-env.eba-9kvg9eap.ap-southeast-2.elasticbeanstalk.com/api';
+const API_URL = RAW_API_URL.replace(/\/+$/, '');
 
 export const apiClient = axios.create({
   baseURL: API_URL,

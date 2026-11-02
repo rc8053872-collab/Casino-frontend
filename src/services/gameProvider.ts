@@ -29,7 +29,7 @@ export interface GameProvider {
   getCategories(): Promise<Category[]>
   getProviders(category?: string): Promise<string[]>
   getGames(category?: string, inrOnly?: boolean, provider?: string, search?: string, page?: number, limit?: number, gameType?: string): Promise<{ games: Game[]; pagination: any }>
-  launchGame(gameSlug: string): Promise<{ sessionUrl: string }>
+  launchGame(game: Game | string): Promise<{ sessionUrl: string }>
 }
 
 const categories: Category[] = [
@@ -57,7 +57,6 @@ const games: Game[] = [
   { id: 'deep-sea', name: 'Deep Sea Riches', provider: 'Aqua Works', category: 'fishing', image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=700&q=80', accent: '#3bd0e6' },
   { id: 'wild-west', name: 'Wild West Gold', provider: 'JILI', category: 'slots', image: 'https://images.unsplash.com/photo-1518623380242-d992d3c57b37?auto=format&fit=crop&w=700&q=80', accent: '#e9893c' },
   { id: 'candy-crush', name: 'Candy Super', provider: 'PG', category: 'slots', image: '/icons/slot_main.jpg', accent: '#e9893c' },
-  { id: 'dragon-tiger-2', name: 'Dragon Tiger', provider: 'JDB', category: 'slots', image: '/icons/dragon_main.jpg', accent: '#e9893c' },
 ]
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -155,10 +154,15 @@ export const liveGameProvider: GameProvider = {
       return { games: [], pagination: { total: 0, page: 1, limit: 40, totalPages: 1 } }; 
     }
   },
-  async launchGame(gameSlug) {
+  async launchGame(game: Game | string) {
     try {
+      const slug = typeof game === 'string' ? game : (game.slug || game.id);
+      const uid = typeof game === 'object' ? (game.gameUid || game.providerId || game.id) : undefined;
+      const gameId = typeof game === 'object' ? game.id : undefined;
+
       const response = await apiClient.post<any, any>('/v1/games/launch', {
-        game_slug: gameSlug
+        game_slug: slug,
+        game_uid: uid || gameId || slug
       });
       if (typeof response?.launch_url !== 'string') {
         throw new Error('The game provider returned an invalid launch URL.');
